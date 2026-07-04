@@ -19,6 +19,42 @@ Aimed at robotics / RoboSub-style vehicles and control-system experiments.
 
 ---
 
+## Demo
+
+```bash
+julia --project=. examples/demo.jl
+```
+
+runs the whole loop — geometry → allocate → diagnose → optimise → ship — end to
+end. Real output from that run:
+
+```text
+$ julia --project=. examples/demo.jl
+2. Allocate a command: forward + yaw right
+Actuator commands:
+  front-right-horiz        0.7553                      |████████████████████
+  back-right-horiz        -0.7553  ████████████████████|
+  ...
+  rank / condition #  : 6/6  ,  κ = 4.545
+
+4. Can it actually do this? (reachability)
+Reachability: NOT REACHABLE ✗
+  UNREACHABLE: Fx short by 1.1716; 4 actuators saturated
+
+7. Design, not just analyse: optimise a cramped layout
+  objective score : 10 → 7.402  (26.0% better)
+  condition κ     : 10.000 → 7.402
+
+8. Ship it: generate a real-time-safe C++ header
+wrote thruster_allocation.hpp — no Julia dependency at runtime
+```
+
+No hardware, no simulator, no plotting dependency required — just Julia. See
+[`examples/demo.jl`](examples/demo.jl) for the full 8-step script, or the
+[`examples/`](examples) directory for ~20 focused one-feature scripts.
+
+---
+
 ## Background
 
 I like building robotics software before building robotics hardware.
