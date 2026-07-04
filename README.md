@@ -58,6 +58,35 @@ was designed for.
 
 ---
 
+## Why this matters
+
+Pool time and field time are the expensive, limited resource on any AUV/ROV
+project — every hour spent debugging thruster wiring in the water is an hour
+not spent testing the mission itself. Most allocation bugs are geometric and
+catchable on a laptop before that:
+
+- **A layout that looks fine on paper can be under-actuated.** `diagnostics`
+  and `controllable_dofs` catch a missing DOF (e.g. no heave authority) before
+  the first wet test, not after.
+- **"What if thruster 3 dies?" has a knowable answer.** `rank_failures` and
+  `monte_carlo` turn "probably fine" into a rank/condition-number number, so a
+  team can decide *in advance* whether a failure is recoverable or mission-ending.
+- **A command that looks reachable on the controller side may not be, once
+  saturation is accounted for.** `reachable` and the `:qp` solver are the
+  difference between "the allocator returned numbers" and "the vehicle can
+  actually do this."
+- **The result isn't stuck in a notebook.** `export_cpp` turns the analysis
+  into a dependency-free header that runs on the real flight controller, so the
+  same math that was checked in Julia is what ships.
+
+None of this is specific to one team's vehicle — the `AbstractActuator`/`Vehicle`
+abstraction means a RoboSub ROV, a research AUV, or a spacecraft reaction-wheel
+cluster all go through the same checks. The point isn't the linear algebra
+(`pinv` is one line); it's catching a bad design *before* it costs a pool
+session, a competition run, or a mission.
+
+---
+
 ## The problem it solves
 
 An AUV controller does not command individual motors. It asks the vehicle to
