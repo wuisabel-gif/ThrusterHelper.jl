@@ -10,6 +10,7 @@
 /examples/*.png
 /examples/*.svg
 /examples/*.pdf
+/examples/*.hpp
 
 # Editor / OS
 .DS_Store

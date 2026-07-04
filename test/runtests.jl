@@ -238,6 +238,50 @@ using Test
         @test resm.after.manipulability >= diagnostics(v).manipulability - 1e-9
     end
 
+    # -- C++ export -----------------------------------------------------------
+    @testset "export_cpp()" begin
+        v = bluerov_vehicle()
+        src = export_cpp(v)
+        @test occursin("kNumActuators = 8", src)
+        @test occursin("THRUSTER_ALLOCATION_HPP", src)
+        @test occursin("namespace thruster_allocation", src)
+        @test_throws ArgumentError export_cpp(v; method=:qp)
+
+        cxx = Sys.which("c++")
+        if cxx === nothing
+            @warn "no C++ compiler found; skipping export_cpp numeric round-trip check"
+        else
+            mktempdir() do dir
+                for (method, weights) in ((:minimum_norm, nothing), (:weighted, [1,1,1,1,2,2,2,2.0]))
+                    hpp = joinpath(dir, "alloc.hpp")
+                    export_cpp(v; method=method, weights=weights, path=hpp)
+                    cpp = joinpath(dir, "main.cpp")
+                    write(cpp, """
+                    #include "alloc.hpp"
+                    #include <cstdio>
+                    int main() {
+                        std::array<float,6> tau1{1.0f,0,0,0,0,0.5f};
+                        std::array<float,6> tau2{0,0,1.0f,0.3f,0,0};
+                        for (auto tau : {tau1, tau2}) {
+                            auto f = thruster_allocation::allocate(tau);
+                            for (float v : f) std::printf("%.9f ", v);
+                        }
+                        return 0;
+                    }
+                    """)
+                    exe = joinpath(dir, "main")
+                    run(`$cxx -std=c++17 -O2 -o $exe $cpp`)
+                    out = parse.(Float64, split(strip(read(`$exe`, String))))
+
+                    julia_f1 = allocate(v, [1.0,0,0,0,0,0.5]; method=method, weights=weights).commands
+                    julia_f2 = allocate(v, [0,0,1.0,0.3,0,0]; method=method, weights=weights).commands
+                    @test out[1:8] ≈ julia_f1 atol=1e-5
+                    @test out[9:16] ≈ julia_f2 atol=1e-5
+                end
+            end
+        end
+    end
+
     # -- reporting ----------------------------------------------------------
     @testset "report() runs" begin
         thr = bluerov_heavy()

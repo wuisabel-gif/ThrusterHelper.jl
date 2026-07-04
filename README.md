@@ -323,6 +323,29 @@ wheels) just implement `wrench_column` and `command_limits`.
 
 ---
 
+## Deploying to firmware / ROS 2
+
+`export_cpp(vehicle)` bakes any vehicle's allocation into a self-contained,
+dependency-free C++17 header — no Julia or ThrusterHelper needed at runtime:
+
+```julia
+export_cpp(bluerov_vehicle(); path = "thruster_allocation.hpp")
+```
+
+```cpp
+#include "thruster_allocation.hpp"
+auto f = thruster_allocation::allocate({Fx, Fy, Fz, taux, tauy, tauz});
+```
+
+`:minimum_norm` and `:weighted` reduce to a fixed matrix once geometry is
+chosen, so the header just does a constant-size matrix-vector multiply and a
+direction-preserving saturation clamp — O(N), no heap, no iteration, real-time
+safe. (`:qp`/`:minimum_power` are iterative and don't export.) This works for
+any vehicle built with this package, not one particular AUV — swap in your own
+thruster layout and regenerate. See `examples/export_cpp.jl`.
+
+---
+
 ## Plotting
 
 Plotting is an optional [package extension](https://pkgdocs.julialang.org/v1/creating-packages/#Conditional-loading-of-code-in-packages-(Extensions)).
@@ -383,6 +406,7 @@ thruster-helper-jl/
 │   ├── diagnostics.jl       # rank, conditioning, SVD, control authority
 │   ├── analysis.jl          # reachable, compare_methods, rank_failures, monte_carlo
 │   ├── optimize.jl          # optimize_layout — design search
+│   ├── export_cpp.jl        # export_cpp — real-time-safe C++ header codegen
 │   ├── visualization.jl     # text/ASCII reports (no deps)
 │   ├── plotting.jl          # graphical impl (loaded by the extension)
 │   └── layouts/
@@ -390,7 +414,7 @@ thruster-helper-jl/
 │       └── simple_quad.jl   # simple_quad / quad_vehicle
 ├── ext/
 │   └── ThrusterHelperPlotsExt.jl   # Plots extension
-├── examples/                # ~15 tiny scripts
+├── examples/                # ~20 tiny scripts
 ├── test/runtests.jl
 ├── README.md
 └── Project.toml
@@ -426,8 +450,9 @@ redundant control the over-actuation buys.
 Done so far: multiple allocation solvers (`:minimum_norm`, `:weighted`,
 `:minimum_power`, `:qp`), SVD-based diagnostics, reachability analysis, a
 method-comparison report, failure-criticality ranking, Monte-Carlo robustness,
-a layout **optimiser**, an `AbstractActuator`/`Vehicle` abstraction and a power
-model — the v1→v3 (allocation → diagnostics → design optimisation) arc.
+a layout **optimiser**, a real-time-safe **C++ export**, an
+`AbstractActuator`/`Vehicle` abstraction and a power model — the v1→v3
+(allocation → diagnostics → design optimisation) arc.
 
 Still on the list:
 
@@ -437,7 +462,7 @@ Still on the list:
 - PID / LQR controller-in-the-loop simulation
 - Mission-level energy optimisation
 - Symbolic Jacobian / sensitivity (`Symbolics.jl`)
-- Export `B` / `pinv(B)` to C++ / ROS 2
+- ROS 2 node wrapper around the C++ export
 - Interactive GUI
 
 ## Publishing

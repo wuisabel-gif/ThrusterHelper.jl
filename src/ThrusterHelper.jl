@@ -48,6 +48,7 @@ include("constraints.jl")
 include("diagnostics.jl")
 include("analysis.jl")
 include("optimize.jl")
+include("export_cpp.jl")
 include("visualization.jl")
 
 # --- ready-made vehicles ---
@@ -83,6 +84,9 @@ export monte_carlo, MonteCarloResult
 
 # Design optimisation
 export optimize_layout, OptimizationResult
+
+# Firmware / ROS export
+export export_cpp
 
 # Reporting
 export describe, report, bar
