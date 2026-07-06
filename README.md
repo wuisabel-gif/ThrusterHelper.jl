@@ -2,7 +2,7 @@
 
 *Julia package: `ThrusterHelper.jl`*
 
-[![CI](https://github.com/wuisabel-gif/thruster-helper-jl/actions/workflows/CI.yml/badge.svg)](https://github.com/wuisabel-gif/thruster-helper-jl/actions/workflows/CI.yml)
+[![CI](https://github.com/wuisabel-gif/ThrusterHelper.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/wuisabel-gif/ThrusterHelper.jl/actions/workflows/CI.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Julia](https://img.shields.io/badge/Julia-%E2%89%A5%201.9-9558B2?logo=julia&logoColor=white)](https://julialang.org)
 [![version](https://juliahub.com/docs/General/ThrusterHelper/stable/version.svg)](https://juliahub.com/ui/Packages/General/ThrusterHelper)
@@ -469,7 +469,7 @@ The source is organised by the **algorithm pipeline**, so it is obvious where
 each part lives:
 
 ```text
-thruster-helper-jl/
+ThrusterHelper.jl/
 ├── src/
 │   ├── ThrusterHelper.jl        # module, includes, exports
 │   ├── types.jl             # AbstractActuator, Thruster, ReactionWheel, Vehicle, results
@@ -556,7 +556,7 @@ Until then, it installs straight from Git:
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/wuisabel-gif/thruster-helper-jl")
+Pkg.add(url="https://github.com/wuisabel-gif/ThrusterHelper.jl")
 ```
 
 ## License
