@@ -11,6 +11,9 @@
 /examples/*.svg
 /examples/*.pdf
 /examples/*.hpp
+# ...except the two committed demo images referenced from the README
+!/examples/thruster_layout.png
+!/examples/manipulability.png
 
 # Editor / OS
 .DS_Store

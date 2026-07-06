@@ -53,6 +53,15 @@ No hardware, no simulator, no plotting dependency required — just Julia. See
 [`examples/demo.jl`](examples/demo.jl) for the full 8-step script, or the
 [`examples/`](examples) directory for ~20 focused one-feature scripts.
 
+With the optional `Plots` extension (`examples/plot_layout.jl` /
+`examples/plot_ellipsoid.jl`):
+
+<img src="examples/thruster_layout.png" width="420" alt="Thruster layout: 8 thrusters, two failed (grey ✕), one reversed (red arrow)"> <img src="examples/manipulability.png" width="420" alt="3-D manipulability ellipsoid with the weakest axis in red">
+
+*Left: force-vector layout for a forward+yaw command with two thrusters failed
+(grey ✕) and one reversed (red). Right: the manipulability ellipsoid — long
+axes are cheap directions, the red axis is the design's weak spot.*
+
 ---
 
 ## Background
