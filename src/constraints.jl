@@ -95,3 +95,34 @@ estimate_power(f::AbstractVector; k::Real=1.0, p::Real=1.5, idle::Real=0.0) =
 
 "Total estimated electrical power for a command vector."
 total_power(f::AbstractVector; kwargs...) = sum(estimate_power(f; kwargs...))
+
+"""
+    estimate_current(f; k=1.0, p=1.5, k_reverse=k) -> Vector{Float64}
+
+Rough per-actuator current draw (amps). Like [`estimate_power`](@ref),
+`current ∝ |f|^p`, but with an optional separate coefficient for **reverse**
+commands — many thrusters (e.g. the BlueRobotics T200) are less efficient in
+reverse and draw more current per unit thrust:
+
+    current[i] = (f[i] ≥ 0 ? k : k_reverse) * |f[i]|^p
+
+Anchor to a bench point with `k = amps / thrust^p` (e.g. 6 A at 20 N forward,
+p=1.5 ⇒ `k ≈ 0.067`; 6 A at 15 N reverse ⇒ `k_reverse ≈ 0.103`). Feed the result
+to [`group_totals`](@ref) to check a shared power-board budget.
+"""
+estimate_current(f::AbstractVector; k::Real=1.0, p::Real=1.5, k_reverse::Real=k) =
+    [(fi >= 0 ? k : k_reverse) * abs(fi)^p for fi in f]
+
+"""
+    group_totals(x, groups) -> Vector{Float64}
+
+Sum a per-actuator quantity `x` (current, power, |thrust|, …) over each group of
+actuator indices, one total per group in order. `groups` is any collection of
+index collections — thrusters sharing a power board, a thermal zone, a hydraulic
+circuit. Compare against per-group budgets to check a shared limit:
+
+    boards = [1:4, 5:8]                       # T0–T3, T4–T7
+    I = estimate_current(f; k=0.067, k_reverse=0.103)
+    all(group_totals(I, boards) .<= 24)       # within the 24 A/board budget?
+"""
+group_totals(x::AbstractVector, groups) = [sum(x[g]) for g in groups]
