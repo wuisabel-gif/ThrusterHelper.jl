@@ -17,8 +17,11 @@ Numerical health of an allocation matrix `B`. Fields:
 - `condition_number`        : `σ_max / σ_min` (well-conditioned ≈ small; Inf ⇒ rank loss).
 - `manipulability`          : `√det(B Bᵀ)`, volume of the achievable-wrench ellipsoid.
 - `controllable`            : `Bool` per DOF — is that wrench axis in range(B)?
-- `weakest_direction`       : unit wrench (left singular vector of σ_min) hardest to produce.
-- `weakest_gain`            : σ_min, the gain along `weakest_direction`.
+- `weakest_direction`       : unit wrench (left singular vector of the smallest
+                              **nonzero** σ) hardest to produce *within* range(B).
+                              DOFs outside range(B) are unreachable entirely —
+                              see `controllable`.
+- `weakest_gain`            : that smallest nonzero σ, the gain along `weakest_direction`.
 """
 struct AllocationDiagnostics
     n_dof::Int
@@ -52,7 +55,9 @@ function diagnostics(B::AbstractMatrix; tol::Real=1e-9)
         return AllocationDiagnostics(6, n, 0, n, copy(σ), Inf, 0.0,
                                      fill(false, 6), F.U[:, 1], 0.0)
     end
-    cn = σ[r] > 0 ? σ[1] / σ[r] : Inf
+    # Rank-deficient ⇒ smallest singular value is (numerically) zero, so the
+    # condition number is Inf — matching `cond(B)` and the field docstring.
+    cn = r < 6 ? Inf : σ[1] / σ[r]
     manip = r == 6 ? sqrt(max(det(B * B'), 0.0)) : 0.0
 
     # Control authority: e_k achievable ⇔ in range(B) = span(U[:, 1:r]).
