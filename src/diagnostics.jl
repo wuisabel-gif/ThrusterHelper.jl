@@ -46,6 +46,12 @@ function diagnostics(B::AbstractMatrix; tol::Real=1e-9)
     F = svd(B)                     # B = U Σ Vᵀ, U is 6×6, σ sorted descending
     σ = F.S
     r = count(>(tol * (σ[1] + eps())), σ)
+    if r == 0
+        # Degenerate all-zero B (e.g. every actuator failed): nothing is
+        # reachable. Return a well-defined result instead of indexing σ[0].
+        return AllocationDiagnostics(6, n, 0, n, copy(σ), Inf, 0.0,
+                                     fill(false, 6), F.U[:, 1], 0.0)
+    end
     cn = σ[r] > 0 ? σ[1] / σ[r] : Inf
     manip = r == 6 ? sqrt(max(det(B * B'), 0.0)) : 0.0
 
