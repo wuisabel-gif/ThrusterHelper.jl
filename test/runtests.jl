@@ -158,6 +158,21 @@ using Test
                                [1:4, 5:8]) .<= 24)
     end
 
+    @testset "allocate_grouped enforces a binding budget in-bounds" begin
+        B = allocation_matrix(bluerov_heavy())
+        τ = [2.0, 0, 0, 0, 0, 0]
+        groups = [1:4, 5:8]
+        # budget set below the unconstrained board draw ⇒ the constraint binds
+        plain = allocate(B, τ; method=:qp, bounds=3.0)
+        budget = 0.6 * maximum(group_totals(estimate_current(plain.commands), groups))
+        r = allocate_grouped(B, τ; groups=groups, budgets=budget, bounds=3.0)
+        @test all(group_totals(estimate_current(r.commands), groups) .<= budget + 1e-6)
+        @test maximum(abs.(r.commands)) <= 3.0 + 1e-6      # box always respected
+        # a budget the plain solution already meets ⇒ returns it unchanged
+        loose = allocate_grouped(B, τ; groups=groups, budgets=1e6, bounds=3.0)
+        @test loose.commands ≈ plain.commands atol=1e-9
+    end
+
     # -- diagnostics --------------------------------------------------------
     @testset "Diagnostics: full-rank BlueROV" begin
         d = diagnostics(bluerov_heavy())

@@ -71,7 +71,7 @@ export allocate, ALLOCATION_METHODS
 
 # Constraints / failures / power
 export saturate, scale_to_limits, apply_failures, failed_indices
-export estimate_power, total_power, estimate_current, group_totals
+export estimate_power, total_power, estimate_current, group_totals, allocate_grouped
 
 # Diagnostics
 export diagnostics, controllable_dofs, dominant_dof
