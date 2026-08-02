@@ -97,6 +97,28 @@ estimate_power(f::AbstractVector; k::Real=1.0, p::Real=1.5, idle::Real=0.0) =
 total_power(f::AbstractVector; kwargs...) = sum(estimate_power(f; kwargs...))
 
 """
+    actuator_commands(forces, actuators) -> Vector{Float64}
+    actuator_commands(result::AllocationResult, actuators)
+
+Map allocated per-actuator **forces** (N) to the raw commands you actually send
+to the hardware (e.g. PWM µs), through each actuator's [`ThrustCurve`](@ref).
+Actuators without a curve pass through unchanged (the force itself). This is the
+bridge from an [`allocate`](@ref) result to firmware.
+
+```julia
+r = allocate(vehicle, τ; method = :qp)
+pwm = actuator_commands(r, vehicle.actuators)   # forces → PWM via each thruster's curve
+```
+"""
+function actuator_commands(forces::AbstractVector, actuators)
+    length(forces) == length(actuators) ||
+        throw(ArgumentError("forces length $(length(forces)) ≠ actuators length $(length(actuators))"))
+    return [(c = thrust_curve(a); c === nothing ? float(f) : force_to_command(c, f))
+            for (f, a) in zip(forces, actuators)]
+end
+actuator_commands(r::AllocationResult, actuators) = actuator_commands(r.commands, actuators)
+
+"""
     estimate_current(f; k=1.0, p=1.5, k_reverse=k) -> Vector{Float64}
 
 Rough per-actuator current draw (amps). Like [`estimate_power`](@ref),

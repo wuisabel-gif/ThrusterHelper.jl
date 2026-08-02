@@ -132,6 +132,39 @@ using Test
         @test norm(allocate(Bf, [1.0,0,0,0,0,0]).residual) < 1e-6   # forward survives
     end
 
+    @testset "ThrustCurve force↔command mapping" begin
+        tc = t200_curve()
+        # invertible: command → force → command round-trips
+        for pwm in (1150, 1400, 1500, 1650, 1850)
+            f = command_to_force(tc, pwm)
+            @test force_to_command(tc, f) ≈ pwm rtol=1e-6
+        end
+        @test command_to_force(tc, 1500) ≈ 0.0 atol=1e-9        # neutral ≈ no thrust
+        @test command_to_force(tc, 1900) > -command_to_force(tc, 1100)  # forward > reverse (asymmetric)
+        # clamps outside the sampled range (saturation)
+        @test force_to_command(tc, 1e6) == 1900
+        @test force_to_command(tc, -1e6) == 1100
+        # construction validation
+        @test_throws ArgumentError ThrustCurve([0.0, 0.0], [1500.0, 1600.0])   # force not increasing
+        @test_throws ArgumentError ThrustCurve([-1.0, 1.0], [1500.0])          # length mismatch
+    end
+
+    @testset "Thruster carries an optional ThrustCurve" begin
+        tc = t200_curve()
+        t = Thruster("t", [0.1,0,0], [1,0,0]; max_thrust=51.5, curve=tc)
+        @test thrust_curve(t) === tc
+        @test thrust_curve(Thruster("u", [0.1,0,0], [1,0,0])) === nothing      # default: linear
+        @test thrust_curve(ReactionWheel("rw", [0,0,1.0])) === nothing
+        # allocation is unchanged (force-based); a curve doesn't alter B
+        @test allocation_matrix([t]) == allocation_matrix([Thruster("t",[0.1,0,0],[1,0,0])])
+        # actuator_commands maps allocated force → PWM (curve) or passes force through (no curve)
+        thr = [Thruster("a",[0.2,0,0],[1,0,0]; max_thrust=51.5, curve=tc),
+               Thruster("b",[0.2,0,0],[1,0,0]; max_thrust=51.5)]
+        cmds = actuator_commands([28.4, 3.0], thr)
+        @test cmds[1] ≈ 1700 rtol=1e-6        # 28.4 N → 1700 µs via the T200 curve
+        @test cmds[2] == 3.0                   # no curve → passthrough (force in N)
+    end
+
     @testset "Power model" begin
         @test estimate_power([2.0]; p=1.5)[1] ≈ 2.0^1.5
         @test estimate_power([0.0]; idle=3.0)[1] ≈ 3.0

@@ -478,6 +478,33 @@ thruster layout and regenerate. See `examples/export_cpp.jl`.
 
 ---
 
+## Real command units (thrust curves)
+
+Allocation works in **force** (newtons) — the wrench is linear in thruster
+force, so that's where the math belongs. But a real thruster's force↔command
+relationship is nonlinear and asymmetric: a BlueRobotics T200 pushes ~+51 N
+forward yet only ~−40 N in reverse, with a dead-band around neutral PWM. A
+`ThrustCurve` captures that, and `actuator_commands` maps an allocation result
+to what you actually send the hardware:
+
+```julia
+tc  = t200_curve()                                   # BlueRobotics T200 @ 16 V
+thr = [Thruster(t.name, t.position, t.direction; max_thrust = 51.5, curve = tc)
+       for t in bluerov_heavy()]
+v   = Vehicle("my-rov", thr)
+
+r   = allocate(v, τ; method = :qp)                   # per-thruster force (N)
+pwm = actuator_commands(r, v.actuators)              # → PWM µs via each thruster's curve
+```
+
+Thrusters without a curve pass through unchanged (force in N), so this is fully
+opt-in and backward compatible. `force_to_command` / `command_to_force` expose
+the mapping directly, and `t200_curve()` is a ready-made starting point (retune
+the samples to your own bench data). The `export_cpp` mixer emits forces too —
+apply your curve on the firmware side. See `examples/thrust_curve.jl`.
+
+---
+
 ## Plotting
 
 Plotting is an optional [package extension](https://pkgdocs.julialang.org/v1/creating-packages/#Conditional-loading-of-code-in-packages-(Extensions)).

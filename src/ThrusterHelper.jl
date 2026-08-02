@@ -40,6 +40,7 @@ using Printf
 using Random
 
 # --- pipeline ---
+include("thrust_curve.jl")
 include("types.jl")
 include("geometry.jl")
 include("allocation_matrix.jl")
@@ -60,6 +61,10 @@ include("layouts/cubesat.jl")
 export AbstractActuator, Thruster, ReactionWheel, Vehicle, SVec3
 export AllocationResult, AllocationDiagnostics
 export nactuators, nthrusters, label
+
+# Thrust curves (nonlinear force ↔ command mapping)
+export ThrustCurve, force_to_command, command_to_force, t200_curve, thrust_curve
+export actuator_commands
 
 # Geometry
 export skew, column, wrench_column, force_contribution, torque_contribution
