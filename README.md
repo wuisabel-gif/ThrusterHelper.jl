@@ -583,20 +583,21 @@ Done so far: multiple allocation solvers (`:minimum_norm`, `:weighted`,
 `:minimum_power`, `:qp`), SVD-based diagnostics, reachability analysis, a
 method-comparison report, failure-criticality ranking, Monte-Carlo robustness,
 a layout **optimiser**, a real-time-safe **C++ export**, an
-`AbstractActuator`/`Vehicle` abstraction, a power model and shared power-board
-**current-budget** allocation — the v1→v3 (allocation → diagnostics → design
-optimisation) arc.
+`AbstractActuator`/`Vehicle` abstraction, a power model, shared power-board
+**current-budget** allocation, and a **multi-domain built-in vehicle library**
+(AUV / ROV / spacecraft — BlueROV2 Heavy & standard, quad, CubeSat pyramid) —
+the v1→v3 (allocation → diagnostics → design optimisation) arc.
 
-Still on the list:
+Still on the list (each tracked in an issue):
 
-- Nonlinear thruster curves (PWM ↔ thrust) and dead-bands
-- Battery voltage-sag model
-- Hydrodynamic drag model
-- PID / LQR controller-in-the-loop simulation
-- Mission-level energy optimisation
-- Symbolic Jacobian / sensitivity (`Symbolics.jl`)
-- ROS 2 node wrapper around the C++ export
-- Interactive GUI
+- Nonlinear thruster curves (PWM ↔ thrust) and dead-bands ([#20](https://github.com/wuisabel-gif/ThrusterHelper.jl/issues/20))
+- Battery voltage-sag model ([#21](https://github.com/wuisabel-gif/ThrusterHelper.jl/issues/21))
+- Hydrodynamic drag model ([#22](https://github.com/wuisabel-gif/ThrusterHelper.jl/issues/22))
+- PID / LQR controller-in-the-loop simulation ([#23](https://github.com/wuisabel-gif/ThrusterHelper.jl/issues/23))
+- Mission-level energy optimisation ([#24](https://github.com/wuisabel-gif/ThrusterHelper.jl/issues/24))
+- Symbolic / AD Jacobian + sensitivity ([#25](https://github.com/wuisabel-gif/ThrusterHelper.jl/issues/25))
+- ROS 2 node wrapper around the C++ export ([#26](https://github.com/wuisabel-gif/ThrusterHelper.jl/issues/26))
+- Interactive GUI ([#27](https://github.com/wuisabel-gif/ThrusterHelper.jl/issues/27))
 
 ## Contributing
 
