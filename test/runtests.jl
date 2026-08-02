@@ -179,6 +179,21 @@ using Test
         @test rank_failures(solo)[1].rank_after == 0
     end
 
+    @testset "condition_number is Inf on rank loss (agrees with cond)" begin
+        # Rank-deficient design: κ must be Inf, matching the field docstring
+        # and the re-exported cond(B) — not a finite range-only conditioning.
+        Bq = allocation_matrix(simple_quad())            # rank 3
+        dq = diagnostics(Bq)
+        @test dq.rank == 3
+        @test dq.condition_number == Inf
+        @test cond(Bq) == Inf                            # they now agree
+        # Full-rank design still reports a finite, sensible κ
+        df = diagnostics(bluerov_heavy())
+        @test df.rank == 6
+        @test isfinite(df.condition_number)
+        @test df.condition_number ≈ cond(allocation_matrix(bluerov_heavy())) rtol=1e-8
+    end
+
     @testset "dominant_dof labels a direction" begin
         @test dominant_dof([0.1, 0.0, 0.9, 0.0, 0.0, 0.0]) == "Fz"
         @test dominant_dof([0,0,0,0,0,1.0]) == "τz"
