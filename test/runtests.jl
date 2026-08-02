@@ -162,6 +162,23 @@ using Test
         @test info.rank == 3 && info.labels[3] == "Fz"
     end
 
+    @testset "Diagnostics: rank-0 (all-dead) matrix does not crash" begin
+        B = allocation_matrix(bluerov_heavy())
+        dead = diagnostics(apply_failures(B, 1:8))        # every actuator failed
+        @test dead.rank == 0
+        @test dead.redundancy == 8
+        @test all(.!dead.controllable)                     # nothing reachable
+        @test dead.condition_number == Inf
+        @test dead.manipulability == 0.0
+        @test dead.weakest_gain == 0.0
+        # monte_carlo with failures used to hit the same σ[0] BoundsError
+        @test monte_carlo(bluerov_vehicle(); failure_prob=0.6, samples=300,
+                          seed=7).full_rank_prob ≥ 0.0
+        # single-actuator vehicle: rank_failures zeros B
+        solo = Vehicle("solo", [Thruster("t", [0.1, 0, 0], [1.0, 0, 0])])
+        @test rank_failures(solo)[1].rank_after == 0
+    end
+
     @testset "dominant_dof labels a direction" begin
         @test dominant_dof([0.1, 0.0, 0.9, 0.0, 0.0, 0.0]) == "Fz"
         @test dominant_dof([0,0,0,0,0,1.0]) == "τz"
