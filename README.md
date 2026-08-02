@@ -322,7 +322,7 @@ Allocation tells you the thrust values; **diagnostics** tell you whether the
 
 - `rank` — `6` ⇒ fully actuated; lower ⇒ DOFs are uncontrollable.
 - `redundancy` — `N − rank`, the null-space / spare control dimension.
-- `condition_number` — `σ_max/σ_min`; large ⇒ some directions need far more thrust.
+- `condition_number` — `σ_max/σ_min`; large ⇒ some directions need far more thrust (`Inf` when rank-deficient, matching `cond(B)`).
 - `manipulability` — `√det(B Bᵀ)`, volume of the achievable-wrench ellipsoid.
 - `controllable` — `Bool` per DOF `[Fx, Fy, Fz, τx, τy, τz]`.
 - `singular_values`, `weakest_direction`, `weakest_gain` — the SVD picture.
