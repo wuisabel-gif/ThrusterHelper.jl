@@ -302,8 +302,10 @@ describe(vehicle)                 # geometry table
 
 `Thruster` is **immutable** — a vehicle does not move its thrusters at run time;
 build a new one to change geometry. Built-in layouts: `bluerov_heavy(; arm,
-span)` / `bluerov_vehicle()` (8 thrusters, fully actuated) and `simple_quad(;
-arm)` / `quad_vehicle()` (4 horizontal thrusters; surge/sway/yaw only).
+span)` / `bluerov_vehicle()` (8 thrusters, fully actuated), `simple_quad(;
+arm)` / `quad_vehicle()` (4 horizontal thrusters; surge/sway/yaw only), and
+`cubesat_pyramid(; cant_deg)` / `cubesat_vehicle()` (4 reaction wheels; 3-axis
+attitude control, single-fault tolerant).
 
 ---
 
