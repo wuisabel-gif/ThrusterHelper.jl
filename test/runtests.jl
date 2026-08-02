@@ -254,6 +254,12 @@ using Test
         @test occursin("namespace thruster_allocation", src)
         @test_throws ArgumentError export_cpp(v; method=:qp)
 
+        # saturate flag: default clamps; saturate=false omits the clamp
+        @test occursin("f[i] /= worst", src)                       # default: clamp present
+        raw = export_cpp(v; saturate=false)
+        @test !occursin("/= worst", raw)                           # no clamp emitted
+        @test occursin("raw least-squares", raw)
+
         cxx = Sys.which("c++")
         if cxx === nothing
             @warn "no C++ compiler found; skipping export_cpp numeric round-trip check"
@@ -284,6 +290,30 @@ using Test
                     julia_f2 = allocate(v, [0,0,1.0,0.3,0,0]; method=method, weights=weights).commands
                     @test out[1:8] ≈ julia_f1 atol=1e-5
                     @test out[9:16] ≈ julia_f2 atol=1e-5
+                end
+
+                # saturate=false reproduces raw Julia allocate() even for a
+                # command large enough to exceed the limits; the default clamp
+                # instead keeps commands within kMaxCommand (the two diverge).
+                bigτ = [6.0, 0, 0, 0, 0, 0]                        # well beyond ±1 N
+                raw_j = allocate(v, bigτ; method=:minimum_norm).commands
+                @test maximum(abs.(raw_j)) > 1.0                   # raw genuinely saturates
+                for (sat, expect) in ((false, raw_j), (true, nothing))
+                    export_cpp(v; saturate=sat, path=joinpath(dir, "a.hpp"))
+                    write(joinpath(dir, "m.cpp"), """
+                    #include "a.hpp"
+                    #include <cstdio>
+                    int main(){ std::array<float,6> t{6.0f,0,0,0,0,0};
+                        auto f = thruster_allocation::allocate(t);
+                        for (float v : f) std::printf("%.9f ", v); return 0; }
+                    """)
+                    run(`$cxx -std=c++17 -O2 -o $(joinpath(dir,"m")) $(joinpath(dir,"m.cpp"))`)
+                    got = parse.(Float64, split(strip(read(`$(joinpath(dir,"m"))`, String))))
+                    if sat
+                        @test maximum(abs.(got)) <= 1.0 + 1e-6     # clamped within limits
+                    else
+                        @test got ≈ raw_j atol=1e-5                # matches raw Julia
+                    end
                 end
             end
         end
