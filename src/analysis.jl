@@ -359,3 +359,87 @@ function top_speeds(v::Vehicle; drag, drag_lin=zeros(6), bounds=command_bounds(v
     end
     return rows
 end
+
+# ---------------------------------------------------------------------------
+# 6. Mission energy — total energy of a wrench sequence, per allocation method.
+# ---------------------------------------------------------------------------
+
+"""
+    MissionEnergy
+
+Result of [`mission_energy`](@ref): `steps`, `dt`, and `rows` — one NamedTuple
+per method `(method, total_energy, peak_power, saturated_steps)`.
+"""
+struct MissionEnergy
+    steps::Int
+    dt::Float64
+    rows::Vector{NamedTuple}
+end
+
+function _wrench_sequence(w)
+    w isa AbstractVector{<:Real} &&
+        throw(ArgumentError("pass a Vector of 6-vectors or a 6×N matrix, not a flat vector"))
+    seq = w isa AbstractMatrix ? [Vector{Float64}(w[:, j]) for j in axes(w, 2)] :
+                                 [Vector{Float64}(τ) for τ in w]
+    all(length(τ) == 6 for τ in seq) ||
+        throw(ArgumentError("each wrench must have 6 elements"))
+    return seq
+end
+
+"""
+    mission_energy(vehicle, wrenches; dt=1.0,
+                   methods=(:minimum_norm, :minimum_power, :qp),
+                   voltage=nothing, ref_voltage=16.0, exponent=2.0,
+                   k=1.0, p=1.5, idle=0.0, weights=nothing) -> MissionEnergy
+
+Total energy of executing a **sequence of wrenches** (a `Vector` of 6-vectors or
+a 6×N matrix), each held for `dt`, under every allocation `method`. For each
+method: `total_energy = Σ total_power(fₛₜₑₚ; k, p, idle)·dt`, the `peak_power`,
+and `saturated_steps` — steps whose commands exceed the actuator limits (nonzero
+only for the limit-ignoring methods, so they can't look artificially cheap).
+
+For a *fixed* sequence, energy is separable in time, so `:minimum_power` is
+already the global optimum — this **quantifies and compares**, it does not beat
+it. Pass `voltage` (with `ref_voltage`) to [`derate`](@ref) the vehicle first:
+that raises `saturated_steps` (can we still fly this at a sagging voltage?)
+without changing the thrust-based energy.
+"""
+function mission_energy(v::Vehicle, wrenches;
+                        dt::Real=1.0,
+                        methods=(:minimum_norm, :minimum_power, :qp),
+                        voltage=nothing, ref_voltage::Real=16.0, exponent::Real=2.0,
+                        k::Real=1.0, p::Real=1.5, idle::Real=0.0, weights=nothing)
+    veh = voltage === nothing ? v :
+          derate(v; from=ref_voltage, to=voltage, exponent=exponent)
+    B = allocation_matrix(veh)
+    lim = max_thrusts(veh)
+    bnd = command_bounds(veh)
+    seq = _wrench_sequence(wrenches)
+    rows = NamedTuple[]
+    for m in methods
+        total_E = 0.0; peak_P = 0.0; sat = 0
+        kw = m === :weighted ? (; weights = weights === nothing ? ones(size(B, 2)) : weights) :
+             m === :qp        ? (; bounds = bnd) : (;)
+        for τ in seq
+            f = allocate(B, τ; method=m, kw...).commands
+            P = total_power(f; k=k, p=p, idle=idle)
+            total_E += P * dt
+            peak_P = max(peak_P, P)
+            any(abs.(f) .> lim .+ 1e-9) && (sat += 1)
+        end
+        push!(rows, (method=m, total_energy=total_E, peak_power=peak_P, saturated_steps=sat))
+    end
+    return MissionEnergy(length(seq), float(dt), rows)
+end
+
+function report(m::MissionEnergy; io::IO=stdout)
+    println(io, "Mission energy  (", m.steps, " steps × dt = ", m.dt, ")")
+    println(io, "─"^54)
+    @printf(io, "  %-14s %12s %12s %8s\n", "method", "energy[J]", "peak[W]", "sat")
+    for r in m.rows
+        @printf(io, "  %-14s %12.4g %12.4g %8d\n",
+                r.method, r.total_energy, r.peak_power, r.saturated_steps)
+    end
+    return nothing
+end
+Base.show(io::IO, m::MissionEnergy) = report(m; io=io)

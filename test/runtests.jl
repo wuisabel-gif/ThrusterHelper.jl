@@ -421,6 +421,31 @@ using Test
                                             zeros(6); kp=1, kd=1)   # mass is NaN
     end
 
+    @testset "mission_energy comparison" begin
+        v = bluerov_vehicle(; max_thrust=51.5)
+        # a feasible mission (well within limits) — apples-to-apples across methods
+        mission = [[10.0,0,0,0,0,0], [0,0,0,0,0,2.0], [5.0,0,0,0,0,1.0]]
+        me = mission_energy(v, mission; dt=0.5, k=1.0, p=1.5)
+        @test me.steps == 3
+        E(m) = first(r.total_energy for r in me.rows if r.method == m)
+        @test E(:minimum_power) <= E(:minimum_norm) + 1e-9   # per-step optimal ⇒ cheapest
+        @test E(:minimum_power) <= E(:qp) + 1e-9
+        @test all(r.saturated_steps == 0 for r in me.rows)   # feasible ⇒ nothing saturates
+        # energy scales linearly with dt
+        me2 = mission_energy(v, mission; dt=1.0)
+        @test first(r.total_energy for r in me2.rows if r.method==:minimum_power) ≈
+              2 * E(:minimum_power) rtol=1e-9
+        # sagging voltage ⇒ a demanding step saturates the limit-ignoring methods
+        demanding = [[120.0,0,0,0,0,0]]
+        sat(me_, m) = first(r.saturated_steps for r in me_.rows if r.method==m)
+        hi = mission_energy(v, demanding; voltage=16)          # ref=16 ⇒ nominal
+        lo = mission_energy(v, demanding; voltage=11)
+        @test sat(lo, :minimum_norm) >= sat(hi, :minimum_norm)
+        @test sat(lo, :minimum_norm) > 0
+        # input validation
+        @test_throws ArgumentError mission_energy(v, [1.0,2,3,4,5,6])   # flat vector
+    end
+
     # -- design optimisation -----------------------------------------------
     @testset "optimize_layout()" begin
         v = bluerov_vehicle(; arm=0.1)                   # cramped → poorly conditioned

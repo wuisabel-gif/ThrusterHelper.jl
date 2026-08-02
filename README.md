@@ -379,6 +379,7 @@ Built on the core, these answer the questions a vehicle *designer* asks:
 |---|---|
 | `reachable(vehicle, τ)` | Can the vehicle produce this wrench within its limits? If not, what's the closest, and which thrusters saturate? |
 | `compare_methods(vehicle, τ)` | Which solver wins here? Tabulates residual, ‖f‖₂, power, saturation, time. |
+| `mission_energy(vehicle, wrenches; dt)` | Total energy of a wrench *sequence* per method (+ peak power, saturated-step count); which allocation is cheapest, and can it fly at a sagging voltage. |
 | `rank_failures(vehicle; pairs=…)` | How critical is each thruster? Rank/κ change and lost DOFs for every failure (or pair). |
 | `monte_carlo(vehicle; misalignment_deg, failure_prob, …)` | How robust is the design? P(lose each DOF) and the κ distribution over thousands of perturbed builds. |
 | `top_speeds(vehicle; drag)` | Force authority → **velocity** authority: steady-state top speed / turn rate per DOF, given quadratic hydrodynamic drag. |

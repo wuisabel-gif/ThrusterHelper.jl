@@ -87,6 +87,7 @@ export diagnostics, controllable_dofs, dominant_dof
 # Analysis (reachability, method comparison, failures, robustness)
 export reachable, ReachabilityResult
 export compare_methods, MethodComparison
+export mission_energy, MissionEnergy
 export rank_failures, report_failures
 export monte_carlo, MonteCarloResult
 export terminal_velocity, top_speeds
