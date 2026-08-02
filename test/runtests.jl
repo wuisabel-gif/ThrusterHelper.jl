@@ -401,6 +401,26 @@ using Test
         @test top_speeds(v; drag=zeros(6))[1].top_speed == Inf # no drag ⇒ unbounded
     end
 
+    @testset "Controller-in-the-loop simulation" begin
+        v = bluerov_vehicle(; max_thrust=51.5)                 # ample thrust
+        res = simulate(v, [1.0, 0,0,0,0,0]; kp=50.0, kd=60.0,
+                       drag=fill(40.0, 6), duration=20.0, dt=0.02)
+        @test size(res.state) == (6, length(res.t))
+        @test res.state[1, end] ≈ 1.0 atol=0.05                # converged to 1 m surge
+        @test all(abs.(res.state[2:6, end]) .< 0.05)           # other DOFs stay put
+        # under-actuated: the standard BlueROV2 can't hold a pitch setpoint
+        vp = bluerov_standard_vehicle(; max_thrust=51.5)
+        resp = simulate(vp, [0,0,0,0, 0.3, 0]; kp=50.0, kd=60.0,
+                        drag=fill(40.0, 6), duration=10.0)
+        @test abs(resp.state[5, end] - 0.3) > 0.1              # pitch never reached
+        # a lost thruster still lets the over-actuated Heavy track (redundancy)
+        resf = simulate(v, [1.0, 0,0,0,0,0]; kp=50.0, kd=60.0,
+                        drag=fill(40.0, 6), duration=20.0, failed=[1])
+        @test resf.state[1, end] ≈ 1.0 atol=0.1
+        @test_throws ArgumentError simulate(Vehicle("m", [Thruster("t",[0.1,0,0],[1,0,0])]),
+                                            zeros(6); kp=1, kd=1)   # mass is NaN
+    end
+
     # -- design optimisation -----------------------------------------------
     @testset "optimize_layout()" begin
         v = bluerov_vehicle(; arm=0.1)                   # cramped → poorly conditioned
