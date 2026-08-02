@@ -136,7 +136,7 @@ function _decode(x, thr, free, lo, hi)
         if free !== :directions
             pos = clamp.(x[k:k+2], lo, hi); k += 3
         end
-        out[i] = Thruster(t.name, pos, dir, t.max_thrust)
+        out[i] = Thruster(t.name, pos, dir; max_thrust=t.max_thrust, curve=t.curve)
     end
     return out
 end

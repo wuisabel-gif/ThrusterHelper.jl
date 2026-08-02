@@ -46,9 +46,11 @@ struct Thruster <: AbstractActuator
     position::SVec3
     direction::SVec3
     max_thrust::Float64
+    curve::Union{Nothing,ThrustCurve}   # optional force↔command map; `nothing` ⇒ linear
 end
 
-function Thruster(; name::AbstractString="thruster", position, direction, max_thrust::Real=1.0)
+function Thruster(; name::AbstractString="thruster", position, direction,
+                  max_thrust::Real=1.0, curve::Union{Nothing,ThrustCurve}=nothing)
     p = collect(Float64, position)
     d = collect(Float64, direction)
     length(p) == 3 || throw(ArgumentError("position must have 3 elements, got $(length(p))"))
@@ -56,11 +58,27 @@ function Thruster(; name::AbstractString="thruster", position, direction, max_th
     n = norm(d)
     n > 0 || throw(ArgumentError("thruster `$name` has a zero direction vector"))
     max_thrust > 0 || throw(ArgumentError("max_thrust must be positive, got $max_thrust"))
-    return Thruster(String(name), p, d ./ n, Float64(max_thrust))
+    return Thruster(String(name), p, d ./ n, Float64(max_thrust), curve)
 end
 
-Thruster(name::AbstractString, position, direction; max_thrust::Real=1.0) =
-    Thruster(; name=name, position=position, direction=direction, max_thrust=max_thrust)
+Thruster(name::AbstractString, position, direction; max_thrust::Real=1.0,
+         curve::Union{Nothing,ThrustCurve}=nothing) =
+    Thruster(; name=name, position=position, direction=direction,
+             max_thrust=max_thrust, curve=curve)
+
+# Backward-compatible 4-arg positional constructor (curve defaults to none).
+Thruster(name::AbstractString, position, direction, max_thrust::Real) =
+    Thruster(String(name), collect(Float64, position), collect(Float64, direction),
+             Float64(max_thrust), nothing)
+
+"""
+    thrust_curve(actuator) -> Union{ThrustCurve,Nothing}
+
+The actuator's force↔command [`ThrustCurve`](@ref), or `nothing` if it maps
+force to command linearly (the default, and always for non-thrusters).
+"""
+thrust_curve(::AbstractActuator) = nothing
+thrust_curve(t::Thruster) = t.curve
 
 wrench_column(t::Thruster) = vcat(t.direction, cross(t.position, t.direction))
 

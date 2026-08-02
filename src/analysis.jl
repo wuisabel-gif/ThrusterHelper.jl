@@ -253,7 +253,7 @@ function monte_carlo(thrusters::AbstractVector{Thruster};
         for (i, t) in enumerate(thrusters)
             d = t.direction .+ σang .* randn(rng, 3)        # small-angle misalignment
             p = position_sigma > 0 ? t.position .+ position_sigma .* randn(rng, 3) : t.position
-            perturbed[i] = Thruster(t.name, p, d ./ norm(d), t.max_thrust)
+            perturbed[i] = Thruster(t.name, p, d ./ norm(d); max_thrust=t.max_thrust, curve=t.curve)
             failure_prob > 0 && rand(rng) < failure_prob && push!(dead, i)
         end
         B = allocation_matrix(perturbed)
