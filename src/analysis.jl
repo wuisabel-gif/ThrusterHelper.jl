@@ -304,3 +304,58 @@ function report(m::MonteCarloResult; io::IO=stdout)
     @printf(io, "  manipulability    : mean %.4g\n", m.manip_mean)
     return nothing
 end
+
+# ---------------------------------------------------------------------------
+# 5. Hydrodynamic drag — turn force authority into velocity authority.
+# ---------------------------------------------------------------------------
+
+"""
+    terminal_velocity(force, c_quad; c_lin=0.0) -> Float64
+
+Steady-state velocity at which drag balances a constant `force`:
+`force = c_lin·v + c_quad·|v|·v`. Pure quadratic (`c_lin=0`) gives
+`v = sign(F)·√(|F|/c_quad)`; pure linear (`c_quad=0`) gives `v = F/c_lin`.
+"""
+function terminal_velocity(force::Real, c_quad::Real; c_lin::Real=0.0)
+    F = float(force)
+    if c_quad == 0
+        c_lin == 0 && throw(ArgumentError("need a nonzero drag coefficient"))
+        return F / c_lin
+    end
+    a = float(c_quad); b = float(c_lin)
+    v = (-b + sqrt(b^2 + 4a * abs(F))) / (2a)     # positive root of a·v² + b·v = |F|
+    return sign(F) * v
+end
+
+"""
+    top_speeds(vehicle; drag, drag_lin=zeros(6), bounds=command_bounds(vehicle))
+        -> Vector{NamedTuple}
+
+For each of the 6 DOFs, the strongest wrench the vehicle can *hold* (from the
+limit-respecting authority envelope) and the resulting **steady-state speed**
+against quadratic drag `drag` — per-DOF `N/(m/s)²` for the force axes and
+`N·m/(rad/s)²` for the torque axes — plus optional linear drag `drag_lin`.
+Answers "given this thrust and this drag, what's our top surge speed / yaw rate?".
+
+Each row is `(dof, max_force, min_force, top_speed, min_speed)`; angular DOFs are
+in rad/s. A zero drag coefficient yields `Inf` (no drag → unbounded).
+"""
+function top_speeds(v::Vehicle; drag, drag_lin=zeros(6), bounds=command_bounds(v))
+    B = allocation_matrix(v)
+    lo, hi = _resolve_bounds(bounds, size(B, 2))
+    dq = collect(Float64, drag); dl = collect(Float64, drag_lin)
+    (length(dq) == 6 && length(dl) == 6) ||
+        throw(ArgumentError("drag / drag_lin must have length 6"))
+    speed(F, k) = (dq[k] == 0 && dl[k] == 0) ? sign(F) * Inf :
+                  terminal_velocity(F, dq[k]; c_lin=dl[k])
+    rows = NamedTuple[]
+    for k in 1:6
+        ep = zeros(6); ep[k] =  1e6
+        en = zeros(6); en[k] = -1e6
+        fp = (B * allocate(B, ep; method=:qp, bounds=(lo, hi)).commands)[k]
+        fn = (B * allocate(B, en; method=:qp, bounds=(lo, hi)).commands)[k]
+        push!(rows, (dof=_DOF_LABELS[k], max_force=fp, min_force=fn,
+                     top_speed=speed(fp, k), min_speed=speed(fn, k)))
+    end
+    return rows
+end
