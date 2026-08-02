@@ -224,6 +224,13 @@ using Test
         @test m.cond_mean == m2.cond_mean
     end
 
+    @testset "monte_carlo warns on dropped non-Thruster actuators" begin
+        mixed = Vehicle("mixed", AbstractActuator[bluerov_heavy()...,
+                                                  ReactionWheel("rw", [0.0, 0.0, 1.0])])
+        @test_logs (:warn,) monte_carlo(mixed; samples=50, seed=1)   # wheel dropped ⇒ warn
+        @test_logs monte_carlo(bluerov_vehicle(); samples=50, seed=1)  # all thrusters ⇒ silent
+    end
+
     # -- design optimisation -----------------------------------------------
     @testset "optimize_layout()" begin
         v = bluerov_vehicle(; arm=0.1)                   # cramped → poorly conditioned

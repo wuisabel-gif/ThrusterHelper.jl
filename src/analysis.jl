@@ -273,8 +273,14 @@ function monte_carlo(thrusters::AbstractVector{Thruster};
                             sum(manips)/length(manips))
 end
 
-monte_carlo(v::Vehicle; kwargs...) =
-    monte_carlo(Thruster[a for a in v.actuators if a isa Thruster]; kwargs...)
+function monte_carlo(v::Vehicle; kwargs...)
+    thr = Thruster[a for a in v.actuators if a isa Thruster]
+    dropped = nactuators(v) - length(thr)
+    dropped == 0 || @warn "monte_carlo only perturbs Thruster actuators; " *
+        "ignoring $dropped non-Thruster actuator(s) on \"$(v.name)\". " *
+        "Reported rank / DOF-loss / conditioning reflect the thrusters alone."
+    return monte_carlo(thr; kwargs...)
+end
 
 # tiny dependency-free quantile (linear interpolation on the sorted sample)
 function quantile_sorted(x, q)
