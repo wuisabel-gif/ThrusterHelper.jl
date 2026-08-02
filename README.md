@@ -6,14 +6,18 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Julia](https://img.shields.io/badge/Julia-%E2%89%A5%201.9-9558B2?logo=julia&logoColor=white)](https://julialang.org)
 [![version](https://juliahub.com/docs/General/ThrusterHelper/stable/version.svg)](https://juliahub.com/ui/Packages/General/ThrusterHelper)
+[![docs](https://img.shields.io/badge/docs-online-blue.svg)](https://wuisabel-gif.github.io/ThrusterHelper.jl/dev)
 [![code: dependency-light](https://img.shields.io/badge/deps-stdlib%20only-success.svg)](Project.toml)
 
-A small, dependency-light **AUV thruster-allocation simulator** in Julia. Use it
-to test how an underwater robot turns a desired 6-DOF motion command into
-individual thruster pushes — and to debug thruster geometry, saturation, and
-failures *before* you get in the water.
+A small, dependency-light Julia toolkit for **thruster / actuator allocation and
+control-authority analysis**. It turns a desired 6-DOF wrench into individual
+actuator commands — and, just as importantly, analyses the *design* itself: rank,
+conditioning, redundancy, failure modes and power. The whole arc, from thruster
+geometry to a real-time-safe C++ mixer, runs on a laptop *before* the vehicle
+touches the water.
 
-Aimed at robotics / RoboSub-style vehicles and control-system experiments.
+Built for AUVs and RoboSub-style ROVs, but the math is vehicle-agnostic — a
+spacecraft reaction-wheel cluster flows through the same pipeline.
 
 > *Created: 25 Jun 2026*
 

@@ -19,3 +19,6 @@
 .DS_Store
 .vscode/
 *.swp
+
+# Documenter (build dir already covered above)
+docs/Manifest.toml
