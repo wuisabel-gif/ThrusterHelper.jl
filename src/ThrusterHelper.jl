@@ -88,6 +88,7 @@ export reachable, ReachabilityResult
 export compare_methods, MethodComparison
 export rank_failures, report_failures
 export monte_carlo, MonteCarloResult
+export terminal_velocity, top_speeds
 
 # Design optimisation
 export optimize_layout, OptimizationResult

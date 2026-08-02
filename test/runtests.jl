@@ -385,6 +385,22 @@ using Test
         @test_logs monte_carlo(bluerov_vehicle(); samples=50, seed=1)  # all thrusters ⇒ silent
     end
 
+    @testset "Hydrodynamic drag → top speeds" begin
+        @test terminal_velocity(100, 25) ≈ 2.0                 # √(100/25)
+        @test terminal_velocity(-100, 25) ≈ -2.0               # signed
+        @test terminal_velocity(10, 0; c_lin=5) ≈ 2.0          # pure linear
+        @test_throws ArgumentError terminal_velocity(1, 0)     # no drag defined
+        v = bluerov_vehicle(; max_thrust=51.5)                 # real thrust magnitudes
+        rows = top_speeds(v; drag=fill(20.0, 6))
+        surge = first(r for r in rows if r.dof == "Fx")
+        @test surge.max_force > 0 && isfinite(surge.top_speed) && surge.top_speed > 0
+        @test surge.min_speed < 0                              # reverse direction
+        # quadratic drag: 4× the coefficient ⇒ half the speed
+        slower = first(r for r in top_speeds(v; drag=fill(80.0, 6)) if r.dof == "Fx")
+        @test slower.top_speed ≈ surge.top_speed / 2 rtol=1e-6
+        @test top_speeds(v; drag=zeros(6))[1].top_speed == Inf # no drag ⇒ unbounded
+    end
+
     # -- design optimisation -----------------------------------------------
     @testset "optimize_layout()" begin
         v = bluerov_vehicle(; arm=0.1)                   # cramped → poorly conditioned

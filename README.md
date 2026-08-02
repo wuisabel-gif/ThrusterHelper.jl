@@ -381,6 +381,7 @@ Built on the core, these answer the questions a vehicle *designer* asks:
 | `compare_methods(vehicle, τ)` | Which solver wins here? Tabulates residual, ‖f‖₂, power, saturation, time. |
 | `rank_failures(vehicle; pairs=…)` | How critical is each thruster? Rank/κ change and lost DOFs for every failure (or pair). |
 | `monte_carlo(vehicle; misalignment_deg, failure_prob, …)` | How robust is the design? P(lose each DOF) and the κ distribution over thousands of perturbed builds. |
+| `top_speeds(vehicle; drag)` | Force authority → **velocity** authority: steady-state top speed / turn rate per DOF, given quadratic hydrodynamic drag. |
 | `optimize_layout(vehicle; objective, free)` | **Design**, not just analyse: re-aim (and/or move) thrusters to minimise κ or maximise manipulability. |
 
 ```julia
