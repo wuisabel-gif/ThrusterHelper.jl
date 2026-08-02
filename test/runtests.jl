@@ -228,6 +228,28 @@ using Test
         @test df.condition_number ≈ cond(allocation_matrix(bluerov_heavy())) rtol=1e-8
     end
 
+    @testset "CubeSat 4-wheel pyramid (spacecraft layout)" begin
+        sat = cubesat_vehicle()
+        @test nactuators(sat) == 4
+        B = allocation_matrix(sat)
+        @test all(B[1:3, :] .== 0)                       # wheels make no force
+        d = diagnostics(sat)
+        @test d.rank == 3 && d.redundancy == 1
+        @test d.controllable[4] && d.controllable[5] && d.controllable[6]  # τx,τy,τz
+        @test !any(d.controllable[1:3])                  # no force control
+        @test d.condition_number == Inf                  # full 6-DOF view is rank-deficient
+        @test cond(B[4:6, :]) ≈ sqrt(2) rtol=1e-6        # torque block is well-conditioned
+        # single-fault tolerant: losing ANY one wheel keeps full 3-axis torque control
+        for row in rank_failures(sat)
+            @test row.rank_after == 3
+            @test isempty(row.lost_dofs)
+        end
+        # a commanded torque is realised
+        r = allocate(sat, [0,0,0, 0,0,0.002]; method=:qp, bounds=command_bounds(sat))
+        @test r.achieved[6] ≈ 0.002 atol=1e-6
+        @test norm(r.residual) < 1e-6
+    end
+
     @testset "dominant_dof labels a direction" begin
         @test dominant_dof([0.1, 0.0, 0.9, 0.0, 0.0, 0.0]) == "Fz"
         @test dominant_dof([0,0,0,0,0,1.0]) == "τz"
