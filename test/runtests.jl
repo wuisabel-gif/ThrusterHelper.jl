@@ -228,6 +228,20 @@ using Test
         @test df.condition_number ≈ cond(allocation_matrix(bluerov_heavy())) rtol=1e-8
     end
 
+    @testset "Standard BlueROV2 (6-thruster, under-actuated in pitch)" begin
+        v = bluerov_standard_vehicle()
+        @test nactuators(v) == 6
+        d = diagnostics(v)
+        @test d.rank == 5                                  # between quad (3) and Heavy (6)
+        # surge/sway/heave/roll/yaw controllable; pitch (τy) is not
+        @test d.controllable == Bool[1, 1, 1, 1, 0, 1]
+        @test !d.controllable[5]
+        # demanding pitch is impossible
+        @test norm(allocate(v, [0,0,0, 0,0.3,0]).residual) > 0.1
+        # sanity: the Heavy adds the missing DOF
+        @test diagnostics(bluerov_vehicle()).rank == 6
+    end
+
     @testset "CubeSat 4-wheel pyramid (spacecraft layout)" begin
         sat = cubesat_vehicle()
         @test nactuators(sat) == 4

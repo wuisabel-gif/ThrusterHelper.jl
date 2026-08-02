@@ -93,7 +93,8 @@ export export_cpp
 export describe, report, bar
 
 # Layouts
-export bluerov_heavy, bluerov_vehicle, simple_quad, quad_vehicle
+export bluerov_heavy, bluerov_vehicle, bluerov_standard, bluerov_standard_vehicle
+export simple_quad, quad_vehicle
 export cubesat_pyramid, cubesat_vehicle
 
 # Re-export the LinearAlgebra primitives the docs encourage reaching for, so
