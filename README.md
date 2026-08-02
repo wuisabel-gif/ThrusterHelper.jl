@@ -379,6 +379,36 @@ custom `objective = vehicle -> …` to minimise. See the `reachability.jl`,
 
 ---
 
+## Shared power / current budgets
+
+Thrusters are often ganged on power boards, or share a battery / ESC current
+limit — a constraint that per-actuator bounds can't express. Three composable,
+dependency-free helpers cover it:
+
+| Tool | What it does |
+|---|---|
+| `estimate_current(f; k, p, k_reverse)` | Per-actuator current draw as `∝ \|f\|ᵖ`, with an optional separate reverse coefficient (many thrusters draw more current per unit thrust in reverse). |
+| `group_totals(x, groups)` | Sum any per-actuator quantity (current, power, thrust…) over arbitrary index groups — power boards, thermal zones, hydraulic circuits. |
+| `allocate_grouped(vehicle, τ; groups, budgets, …)` | Allocate a wrench while keeping each group within its shared budget, on top of the per-actuator limits. |
+
+```julia
+boards = [1:4, 5:8]                                   # two power boards
+I = estimate_current(f; k = 0.067, k_reverse = 0.103) # 6 A @ 20 N fwd / 15 N rev
+group_totals(I, boards)                               # per-board current draw
+
+# Enforce a shared budget while staying within thruster limits:
+r = allocate_grouped(vehicle, τ; groups = boards, budgets = 24,
+                     k = 0.067, k_reverse = 0.103)
+```
+
+`allocate_grouped` reuses the `:qp` inner solve, so per-actuator limits are
+**always** respected; the residual grows if the wrench can't be met within the
+budgets. It's a heuristic (box-tightening on over-budget groups), not the
+optimal constrained QP. Nothing vehicle-specific is baked in — groups, current
+anchors and budgets are all caller-supplied. See `examples/board_budget.jl`.
+
+---
+
 ## Beyond AUVs
 
 The math is not underwater-specific — any rigid body whose actuators sum to a
@@ -525,8 +555,9 @@ Done so far: multiple allocation solvers (`:minimum_norm`, `:weighted`,
 `:minimum_power`, `:qp`), SVD-based diagnostics, reachability analysis, a
 method-comparison report, failure-criticality ranking, Monte-Carlo robustness,
 a layout **optimiser**, a real-time-safe **C++ export**, an
-`AbstractActuator`/`Vehicle` abstraction and a power model — the v1→v3
-(allocation → diagnostics → design optimisation) arc.
+`AbstractActuator`/`Vehicle` abstraction, a power model and shared power-board
+**current-budget** allocation — the v1→v3 (allocation → diagnostics → design
+optimisation) arc.
 
 Still on the list:
 
