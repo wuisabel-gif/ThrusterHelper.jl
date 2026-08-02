@@ -219,10 +219,15 @@ they are exactly what this project tries to answer:
 Requires Julia ≥ 1.9 (the optional Plots support uses package extensions, which
 need 1.9+).
 
-It's in Julia's **General registry** — once the pending registration merges
-(see [Publishing](#publishing)), install with `Pkg.add("ThrusterHelper")`. Full
-API docs are online at
-<https://wuisabel-gif.github.io/ThrusterHelper.jl/dev>. From a local clone:
+Install from Julia's **General registry**:
+
+```julia
+using Pkg; Pkg.add("ThrusterHelper")
+```
+
+Full API docs are online at
+<https://wuisabel-gif.github.io/ThrusterHelper.jl/dev>. To develop against a
+local clone:
 
 ```bash
 julia --project=. -e 'using Pkg; Pkg.instantiate()'   # one-time
@@ -585,25 +590,18 @@ Still on the list:
 - ROS 2 node wrapper around the C++ export
 - Interactive GUI
 
-## Publishing
+## Contributing
 
-This package is registration-ready for Julia's **General registry** (name
-`ThrusterHelper` is free, `[compat]` and license are set, tests pass, CI /
-TagBot / CompatHelper workflows are in `.github/workflows/`). To register:
+Contributions are welcome — and right now we're **especially looking for more
+vehicles**. If you run an AUV, ROV, or other actuator layout, adding a built-in
+`Vehicle` for it (in `src/layouts/`) or a new `AbstractActuator` type lets the
+whole community analyse that design out of the box. Because everything is built
+on the `wrench_column` / `command_limits` interface, a new vehicle is usually a
+small, self-contained addition.
 
-1. **Make the repository public** — the General registry only accepts public
-   source. (Conventionally the repo is also renamed to `ThrusterHelper.jl`.)
-2. Comment **`@JuliaRegistrator register`** on the latest commit. The bot opens a
-   PR to [General](https://github.com/JuliaRegistries/General); new packages
-   auto-merge after a ~3-day waiting period.
-3. After merge, `TagBot` tags the release and users can `Pkg.add("ThrusterHelper")`.
-
-Until then, it installs straight from Git:
-
-```julia
-using Pkg
-Pkg.add(url="https://github.com/wuisabel-gif/ThrusterHelper.jl")
-```
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add one and how to set up for
+development, and the [Code of Conduct](CODE_OF_CONDUCT.md). Bug reports and
+feature ideas are just as welcome — [open an issue](https://github.com/wuisabel-gif/ThrusterHelper.jl/issues).
 
 ## License
 
