@@ -54,6 +54,7 @@ include("visualization.jl")
 # --- ready-made vehicles ---
 include("layouts/bluerov.jl")
 include("layouts/simple_quad.jl")
+include("layouts/cubesat.jl")
 
 # Types
 export AbstractActuator, Thruster, ReactionWheel, Vehicle, SVec3
@@ -93,6 +94,7 @@ export describe, report, bar
 
 # Layouts
 export bluerov_heavy, bluerov_vehicle, simple_quad, quad_vehicle
+export cubesat_pyramid, cubesat_vehicle
 
 # Re-export the LinearAlgebra primitives the docs encourage reaching for, so
 # `using ThrusterHelper` is enough to call them on an allocation matrix.

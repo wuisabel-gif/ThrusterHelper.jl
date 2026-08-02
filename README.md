@@ -436,14 +436,19 @@ wrench fits. Actuators are an `AbstractActuator` hierarchy, so a spacecraft
 `ReactionWheel` (pure torque about an axis) drops into the same pipeline:
 
 ```julia
-wheels = [ReactionWheel("rw$i", axis) for (i, axis) in enumerate(pyramid_axes)]
-sat = Vehicle("CubeSat", wheels; mass = 4.0)
+sat = cubesat_vehicle()          # built-in 4-reaction-wheel pyramid (single-fault tolerant)
 report(diagnostics(sat))         # τx/τy/τz controllable; forces are not
-allocate(sat, [0,0,0, 0,0,0.1])  # command a yaw torque
+allocate(sat, [0,0,0, 0,0,0.002])            # command a yaw torque (N·m)
+report_failures(rank_failures(sat))          # lose any one wheel → still rank 3
 ```
 
-See `examples/spacecraft_reaction_wheels.jl`. New actuator types (propellers,
-wheels) just implement `wrench_column` and `command_limits`.
+`cubesat_vehicle()` / `cubesat_pyramid()` are the spacecraft analogue of
+`bluerov_vehicle()` — an off-the-shelf reference cluster (à la Blue Canyon RWP /
+CubeSpace CubeWheel). A wheel craft makes no force, so `condition_number` is
+`Inf` over the full 6 DOF; the meaningful metric is `cond(B[4:6, :])` (the torque
+sub-block) or `plot_manipulability(sat; block=:torque)`. See
+`examples/spacecraft_reaction_wheels.jl`. New actuator types just implement
+`wrench_column` and `command_limits`.
 
 ---
 
