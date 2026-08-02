@@ -48,6 +48,7 @@ include("solver.jl")
 include("constraints.jl")
 include("diagnostics.jl")
 include("analysis.jl")
+include("simulate.jl")
 include("optimize.jl")
 include("export_cpp.jl")
 include("visualization.jl")
@@ -89,6 +90,7 @@ export compare_methods, MethodComparison
 export rank_failures, report_failures
 export monte_carlo, MonteCarloResult
 export terminal_velocity, top_speeds
+export simulate, SimResult
 
 # Design optimisation
 export optimize_layout, OptimizationResult
