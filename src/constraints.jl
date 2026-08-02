@@ -131,9 +131,52 @@ reverse and draw more current per unit thrust:
 Anchor to a bench point with `k = amps / thrust^p` (e.g. 6 A at 20 N forward,
 p=1.5 ⇒ `k ≈ 0.067`; 6 A at 15 N reverse ⇒ `k_reverse ≈ 0.103`). Feed the result
 to [`group_totals`](@ref) to check a shared power-board budget.
+
+Pass `voltage` (with the `ref_voltage` the anchor was measured at) to account for
+battery sag: producing a given thrust takes roughly constant power, so current
+scales as `ref_voltage / voltage` — a sagging pack draws *more* current.
 """
-estimate_current(f::AbstractVector; k::Real=1.0, p::Real=1.5, k_reverse::Real=k) =
-    [(fi >= 0 ? k : k_reverse) * abs(fi)^p for fi in f]
+estimate_current(f::AbstractVector; k::Real=1.0, p::Real=1.5, k_reverse::Real=k,
+                 voltage::Real=1.0, ref_voltage::Real=1.0) =
+    (ref_voltage / voltage) .* [(fi >= 0 ? k : k_reverse) * abs(fi)^p for fi in f]
+
+# ---------------------------------------------------------------------------
+# Battery voltage derating
+# ---------------------------------------------------------------------------
+
+"""
+    derate(curve::ThrustCurve; from, to, exponent=2.0) -> ThrustCurve
+
+Scale a [`ThrustCurve`](@ref) from supply voltage `from` to voltage `to`. Thrust
+scales as `(to/from)^exponent`; the default `exponent=2` is the textbook
+propeller law (thrust ∝ rpm² ∝ V²). Real thrusters are gentler — a BlueRobotics
+T200 is closer to `^1.3`–`^1.7` — so **retune `exponent` to your bench data**.
+Command samples are unchanged; only the forces scale.
+"""
+function derate(c::ThrustCurve; from::Real, to::Real, exponent::Real=2.0)
+    s = (float(to) / float(from))^exponent
+    return ThrustCurve(c.force .* s, c.command)
+end
+
+"""
+    derate(vehicle::Vehicle; from, to, exponent=2.0) -> Vehicle
+
+A copy of `vehicle` with every thruster's `max_thrust` (and its `ThrustCurve`, if
+any) derated from supply voltage `from` to `to`, so `reachable`, the authority
+envelope, and `allocate` all reflect the sagging pack. Non-thruster actuators are
+left unchanged. See [`derate(::ThrustCurve)`](@ref) on the `exponent`.
+"""
+function derate(v::Vehicle; from::Real, to::Real, exponent::Real=2.0)
+    s = (float(to) / float(from))^exponent
+    acts = AbstractActuator[a isa Thruster ?
+        Thruster(a.name, a.position, a.direction;
+                 max_thrust = a.max_thrust * s,
+                 curve = a.curve === nothing ? nothing :
+                         derate(a.curve; from=from, to=to, exponent=exponent)) :
+        a for a in v.actuators]
+    return Vehicle(v.name * " @ $(to)V", acts;
+                   mass=v.mass, inertia=v.inertia, center_of_mass=v.center_of_mass)
+end
 
 """
     group_totals(x, groups) -> Vector{Float64}

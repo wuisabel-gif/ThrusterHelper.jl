@@ -503,6 +503,12 @@ the mapping directly, and `t200_curve()` is a ready-made starting point (retune
 the samples to your own bench data). The `export_cpp` mixer emits forces too —
 apply your curve on the firmware side. See `examples/thrust_curve.jl`.
 
+**Battery sag.** Thrust falls as the pack drains. `derate(vehicle; from=16, to=12)`
+returns a copy with every thruster's limit (and curve) scaled to the lower
+voltage, so `reachable` and the authority envelope reflect end-of-mission
+capability — and `estimate_current(f; voltage=12, ref_voltage=16)` accounts for a
+sagging pack drawing *more* current for the same thrust.
+
 ---
 
 ## Plotting
