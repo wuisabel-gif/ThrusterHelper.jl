@@ -165,6 +165,25 @@ using Test
         @test cmds[2] == 3.0                   # no curve → passthrough (force in N)
     end
 
+    @testset "Battery voltage derating" begin
+        tc = t200_curve()
+        lo = derate(tc; from=16, to=12)                         # (12/16)^2 = 0.5625
+        @test command_to_force(lo, 1900) ≈ command_to_force(tc, 1900) * (12/16)^2 rtol=1e-9
+        @test command_to_force(lo, 1900) < command_to_force(tc, 1900)   # less thrust when sagging
+        @test derate(tc; from=16, to=16).force ≈ tc.force              # no sag ⇒ unchanged
+        # derated vehicle: limits shrink, so the authority envelope shrinks
+        v = bluerov_vehicle()                                  # ±1 N thrusters
+        vd = derate(v; from=16, to=12)
+        @test all(a.max_thrust ≈ 0.5625 for a in vd.actuators)
+        big = [1e4, 0, 0, 0, 0, 0]
+        surge16 = (allocation_matrix(v)  * allocate(v,  big; method=:qp, bounds=command_bounds(v)).commands)[1]
+        surge12 = (allocation_matrix(vd) * allocate(vd, big; method=:qp, bounds=command_bounds(vd)).commands)[1]
+        @test surge12 < surge16                                 # less surge authority at 12 V
+        # estimate_current: same thrust at lower voltage draws more current
+        @test estimate_current([20.0]; k=1.0, voltage=12, ref_voltage=16)[1] ≈
+              estimate_current([20.0]; k=1.0)[1] * (16/12) rtol=1e-9
+    end
+
     @testset "Power model" begin
         @test estimate_power([2.0]; p=1.5)[1] ≈ 2.0^1.5
         @test estimate_power([0.0]; idle=3.0)[1] ≈ 3.0
