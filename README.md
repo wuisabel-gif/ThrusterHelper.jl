@@ -86,7 +86,7 @@ should do. Around that core idea are tools for understanding the vehicle
 itself — its control authority, redundancy, failure modes, and power usage.
 
 This is **not** intended to replace a flight controller or a ROS 2 control
-stack. It is a lightweight simulator for experimenting with thruster layouts and
+stack. It is a lightweight toolkit for experimenting with thruster layouts and
 allocation algorithms. The goal is to keep it dependency-light and easy to read:
 someone interested in underwater robotics should be able to understand the
 entire allocation pipeline in an afternoon.
@@ -210,8 +210,10 @@ they are exactly what this project tries to answer:
 Requires Julia ≥ 1.9 (the optional Plots support uses package extensions, which
 need 1.9+).
 
-Once registered (see [Publishing](#publishing)) it installs with
-`Pkg.add("ThrusterHelper")`. From a local clone:
+It's in Julia's **General registry** — once the pending registration merges
+(see [Publishing](#publishing)), install with `Pkg.add("ThrusterHelper")`. Full
+API docs are online at
+<https://wuisabel-gif.github.io/ThrusterHelper.jl/dev>. From a local clone:
 
 ```bash
 julia --project=. -e 'using Pkg; Pkg.instantiate()'   # one-time
