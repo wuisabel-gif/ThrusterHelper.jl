@@ -385,6 +385,7 @@ Built on the core, these answer the questions a vehicle *designer* asks:
 | `top_speeds(vehicle; drag)` | Force authority → **velocity** authority: steady-state top speed / turn rate per DOF, given quadratic hydrodynamic drag. |
 | `simulate(vehicle, setpoint; kp, kd, drag)` | **Closed loop**: a PID controller through the allocator + rigid-body dynamics — watch a setpoint converge, or a thruster failure degrade tracking. |
 | `optimize_layout(vehicle; objective, free)` | **Design**, not just analyse: re-aim (and/or move) thrusters to minimise κ or maximise manipulability. |
+| `sensitivity(vehicle; objective, method)` | Gradient of a design metric w.r.t. thruster angles: which thruster to nudge and how much it matters. Finite-difference for any metric, or exact `ForwardDiff` (`using ForwardDiff`) for manipulability. |
 
 ```julia
 reachable(vehicle, [30, 0, 0, 0, 0, 0])      # "Fx = 30 N? Vehicle tops out at 22 N." → NOT REACHABLE
