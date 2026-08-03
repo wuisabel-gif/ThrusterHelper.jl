@@ -460,6 +460,33 @@ using Test
         @test resm.after.manipulability >= diagnostics(v).manipulability - 1e-9
     end
 
+    @testset "sensitivity (gradient of design metrics)" begin
+        v = bluerov_vehicle(; arm=0.15)
+        g = sensitivity(v; objective=:manipulability, free=:directions)
+        @test length(g) == 2 * nactuators(v)          # (az, el) per thruster
+        @test all(isfinite, g)
+        # stepping the layout along +g increases manipulability (ascent direction)
+        thr = collect(v.actuators)
+        x0 = ThrusterHelper._encode(thr, :directions)
+        ext = maximum(abs.(reduce(hcat, (t.position for t in thr))); dims=2)[:] .+ 1
+        step(x) = diagnostics(allocation_matrix(
+                      ThrusterHelper._decode(x, thr, :directions, -ext, ext))).manipulability
+        m0 = step(x0)
+        @test step(x0 .+ 1e-3 .* g) >= m0 - 1e-9
+        # works for the SVD-based metric too (finite differences)
+        @test length(sensitivity(v; objective=:condition_number)) == 2 * nactuators(v)
+        # :ad path validates its restrictions
+        @test_throws ArgumentError sensitivity(v; method=:ad, objective=:condition_number)
+    end
+
+    @testset "sensitivity: AD matches finite-difference" begin
+        import ForwardDiff                             # triggers the extension
+        v = bluerov_vehicle(; arm=0.15)
+        g_fd = sensitivity(v; objective=:manipulability, method=:finitediff)
+        g_ad = sensitivity(v; objective=:manipulability, method=:ad)
+        @test g_ad ≈ g_fd rtol=1e-4 atol=1e-6
+    end
+
     # -- C++ export -----------------------------------------------------------
     @testset "export_cpp()" begin
         v = bluerov_vehicle()

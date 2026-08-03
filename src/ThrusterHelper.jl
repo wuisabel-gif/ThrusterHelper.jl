@@ -94,7 +94,7 @@ export terminal_velocity, top_speeds
 export simulate, SimResult
 
 # Design optimisation
-export optimize_layout, OptimizationResult
+export optimize_layout, OptimizationResult, sensitivity
 
 # Firmware / ROS export
 export export_cpp

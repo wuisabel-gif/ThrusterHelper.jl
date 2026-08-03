@@ -177,3 +177,82 @@ function report(r::OptimizationResult; io::IO=stdout)
     @printf(io, "  evaluations     : %d\n", r.evaluations)
     return nothing
 end
+
+# ---------------------------------------------------------------------------
+# Sensitivity — gradient of a design metric w.r.t. the thruster layout.
+# ---------------------------------------------------------------------------
+
+# The actual metric value (not the minimised form _objective_fn returns).
+_metric_fn(objective) =
+    objective === :manipulability   ? (thr -> diagnostics(allocation_matrix(thr)).manipulability) :
+    objective === :condition_number ? (thr -> diagnostics(allocation_matrix(thr)).condition_number) :
+    objective isa Function          ? (thr -> objective(Vehicle("candidate", thr))) :
+    throw(ArgumentError("unknown objective :$objective"))
+
+# Type-generic manipulability from direction angles (positions fixed) — the
+# differentiable path used by the ForwardDiff extension. B built without the
+# Float64-locked `Thruster`, so it accepts Dual numbers.
+function _manip_from_params(angles::AbstractVector{T}, positions) where {T}
+    n = length(positions)
+    B = Matrix{T}(undef, 6, n)
+    for i in 1:n
+        az = angles[2i-1]; el = angles[2i]
+        d = (cos(el) * cos(az), cos(el) * sin(az), sin(el))
+        p = positions[i]
+        B[1, i] = d[1]; B[2, i] = d[2]; B[3, i] = d[3]
+        B[4, i] = p[2]*d[3] - p[3]*d[2]      # (p × d)
+        B[5, i] = p[3]*d[1] - p[1]*d[3]
+        B[6, i] = p[1]*d[2] - p[2]*d[1]
+    end
+    return sqrt(max(det(B * B'), zero(T)))
+end
+
+# Implemented by ThrusterHelperForwardDiffExt when ForwardDiff is loaded.
+_ad_manip_grad(thr, free) =
+    error("sensitivity(...; method=:ad) requires `using ForwardDiff`")
+
+"""
+    sensitivity(vehicle; objective=:manipulability, free=:directions,
+                method=:finitediff, h=1e-6) -> Vector{Float64}
+
+Gradient of a design `objective` (`:manipulability`, `:condition_number`, or a
+`Vehicle -> Real` function) with respect to the thruster layout parameters — the
+same `(azimuth, elevation)` direction angles (and optionally positions) that
+[`optimize_layout`](@ref) searches. Tells you which thruster to nudge, and how
+much each one matters.
+
+- `method=:finitediff` (default, always available) — central differences; works
+  for every objective.
+- `method=:ad` — exact gradient via `ForwardDiff` (needs `using ForwardDiff`).
+  Supported for `objective=:manipulability`, `free=:directions` only: the
+  condition number's SVD is not differentiable through LAPACK.
+"""
+function sensitivity(v::Vehicle; objective=:manipulability, free::Symbol=:directions,
+                     method::Symbol=:finitediff, h::Real=1e-6)
+    thr = Thruster[a for a in v.actuators if a isa Thruster]
+    length(thr) == length(v.actuators) ||
+        throw(ArgumentError("sensitivity currently supports all-Thruster vehicles"))
+    free in (:directions, :positions, :both) ||
+        throw(ArgumentError("free must be :directions, :positions or :both"))
+    if method === :ad
+        objective === :manipulability ||
+            throw(ArgumentError("method=:ad supports objective=:manipulability only " *
+                                "(the SVD-based condition number is not AD-able); use :finitediff"))
+        return _ad_manip_grad(thr, free)
+    end
+    method === :finitediff ||
+        throw(ArgumentError("method must be :finitediff or :ad"))
+    metric = _metric_fn(objective)
+    P = reduce(hcat, (t.position for t in thr))
+    ext = maximum(abs.(P); dims=2)[:] .* 1.5 .+ 1e-3
+    lo, hi = -ext, ext
+    x0 = _encode(thr, free)
+    g = similar(x0)
+    for i in eachindex(x0)
+        xp = copy(x0); xp[i] += h
+        xm = copy(x0); xm[i] -= h
+        g[i] = (metric(_decode(xp, thr, free, lo, hi)) -
+                metric(_decode(xm, thr, free, lo, hi))) / (2h)
+    end
+    return g
+end
