@@ -477,8 +477,15 @@ auto f = thruster_allocation::allocate({Fx, Fy, Fz, taux, tauy, tauz});
 chosen, so the header just does a constant-size matrix-vector multiply and a
 direction-preserving saturation clamp — O(N), no heap, no iteration, real-time
 safe. (`:qp`/`:minimum_power` are iterative and don't export.) This works for
-any vehicle built with this package, not one particular AUV — swap in your own
+any vehicle built with this package, not one particular AUV: swap in your own
 thruster layout and regenerate. See `examples/export_cpp.jl`.
+
+For a **ROS 2** deployment, [`examples/ros2_allocator/`](examples/ros2_allocator)
+is a ready-made ament_cmake package that wraps this header in an `rclcpp` node:
+subscribe to a `geometry_msgs/msg/Wrench`, publish the per-thruster commands.
+Regenerate the header for your vehicle with its `generate_header.jl`, then
+`colcon build`. Its `test/smoke.cpp` checks the exported allocation against Julia
+with no ROS install needed.
 
 ---
 
@@ -654,12 +661,12 @@ the v1→v3 (allocation → diagnostics → design optimisation) arc.
 Shipped since then: nonlinear thruster curves + dead-bands (#20), a battery
 voltage-sag model (#21), a hydrodynamic drag model (#22), a
 controller-in-the-loop simulation (#23), mission-level energy analysis (#24), an
-AD/finite-difference design **sensitivity** gradient (#25), and an **interactive
-Pluto notebook** for live layout design (#27).
+AD/finite-difference design **sensitivity** gradient (#25), a **ROS 2 node**
+wrapping the C++ export (#26), and an **interactive Pluto notebook** for live
+layout design (#27).
 
-Still on the list:
-
-- ROS 2 node wrapper around the C++ export ([#26](https://github.com/wuisabel-gif/ThrusterHelper.jl/issues/26))
+That clears the roadmap that was filed as issues #20 through #27. New ideas
+welcome via issues.
 
 ## Contributing
 
