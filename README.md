@@ -540,6 +540,28 @@ spot. See `examples/plot_ellipsoid.jl`.
 
 ---
 
+## Interactive designer (Pluto notebook)
+
+<p align="center">
+  <img src="notebooks/thruster_designer.gif" width="620" alt="Sweeping the thruster cant angle while rank, condition number κ and manipulability recompute live">
+</p>
+
+[`notebooks/thruster_designer.jl`](notebooks/thruster_designer.jl) is a
+[Pluto](https://plutojl.org) notebook: drag the **arm / span / cant** sliders to
+re-aim and resize the thrusters and watch **rank**, **condition number κ**,
+**manipulability** and **control authority** update live — or fail a thruster
+and see the design degrade. A second panel lets you paste *your own* vehicle in
+as a table (`x, y, z, azimuth°, elevation°, max_thrust`) and see its diagnostics.
+
+```julia
+using Pluto          # add it once: import Pkg; Pkg.add("Pluto")
+Pluto.run(notebook = "notebooks/thruster_designer.jl")
+```
+
+Pluto installs `ThrusterHelper`, `Plots` and `PlutoUI` for you on first open.
+
+---
+
 ## Examples
 
 ~15 small, focused scripts — run with `julia --project=. examples/<name>.jl`.
@@ -625,16 +647,15 @@ a layout **optimiser**, a real-time-safe **C++ export**, an
 (AUV / ROV / spacecraft — BlueROV2 Heavy & standard, quad, CubeSat pyramid) —
 the v1→v3 (allocation → diagnostics → design optimisation) arc.
 
-Still on the list (each tracked in an issue):
+Shipped since then: nonlinear thruster curves + dead-bands (#20), a battery
+voltage-sag model (#21), a hydrodynamic drag model (#22), a
+controller-in-the-loop simulation (#23), mission-level energy analysis (#24), an
+AD/finite-difference design **sensitivity** gradient (#25), and an **interactive
+Pluto notebook** for live layout design (#27).
 
-- Nonlinear thruster curves (PWM ↔ thrust) and dead-bands ([#20](https://github.com/wuisabel-gif/ThrusterHelper.jl/issues/20))
-- Battery voltage-sag model ([#21](https://github.com/wuisabel-gif/ThrusterHelper.jl/issues/21))
-- Hydrodynamic drag model ([#22](https://github.com/wuisabel-gif/ThrusterHelper.jl/issues/22))
-- PID / LQR controller-in-the-loop simulation ([#23](https://github.com/wuisabel-gif/ThrusterHelper.jl/issues/23))
-- Mission-level energy optimisation ([#24](https://github.com/wuisabel-gif/ThrusterHelper.jl/issues/24))
-- Symbolic / AD Jacobian + sensitivity ([#25](https://github.com/wuisabel-gif/ThrusterHelper.jl/issues/25))
+Still on the list:
+
 - ROS 2 node wrapper around the C++ export ([#26](https://github.com/wuisabel-gif/ThrusterHelper.jl/issues/26))
-- Interactive GUI ([#27](https://github.com/wuisabel-gif/ThrusterHelper.jl/issues/27))
 
 ## Contributing
 
