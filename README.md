@@ -529,6 +529,10 @@ r = allocate(vehicle, [1, 0, 0, 0, 0, 0.5]; method = :qp)
 plot_vehicle(vehicle; commands = r.commands, failed = [1, 5], view = :xy)
 ```
 
+<p align="center">
+  <img src="notebooks/thruster_designer_layout.png" width="620" alt="BlueROV2 Heavy layout, top and side views, with rank, condition number and manipulability">
+</p>
+
 `view` can be `:xy` (top-down), `:xz` (side) or `:yz` (rear). Forward thrust is
 green, reverse is red, failed thrusters are greyed with an ✕. (`plot_thrusters`
 takes the actuator vector directly.)
