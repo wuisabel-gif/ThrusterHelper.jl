@@ -11,12 +11,12 @@
 
 A small, dependency-light Julia toolkit for **thruster / actuator allocation and
 control-authority analysis**. It turns a desired 6-DOF wrench into individual
-actuator commands — and, just as importantly, analyses the *design* itself: rank,
+actuator commands, and, just as importantly, analyses the *design* itself: rank,
 conditioning, redundancy, failure modes and power. The whole arc, from thruster
 geometry to a real-time-safe C++ mixer, runs on a laptop *before* the vehicle
 touches the water.
 
-Built for AUVs and RoboSub-style ROVs, but the math is vehicle-agnostic — a
+Built for AUVs and RoboSub-style ROVs, but the math is vehicle-agnostic: a
 spacecraft reaction-wheel cluster flows through the same pipeline.
 
 > *Created: 25 Jun 2026*
@@ -38,7 +38,7 @@ thruster's response solved live by the `:qp` allocator within its ±1 N limit
 julia --project=. examples/demo.jl
 ```
 
-runs the whole loop — geometry → allocate → diagnose → optimise → ship — end to
+runs the whole loop (geometry → allocate → diagnose → optimise → ship) end to
 end. Real output from that run:
 
 ```text
@@ -59,10 +59,10 @@ Reachability: NOT REACHABLE ✗
   condition κ     : 10.000 → 7.402
 
 8. Ship it: generate a real-time-safe C++ header
-wrote thruster_allocation.hpp — no Julia dependency at runtime
+wrote thruster_allocation.hpp: no Julia dependency at runtime
 ```
 
-No hardware, no simulator, no plotting dependency required — just Julia. See
+No hardware, no simulator, no plotting dependency required: just Julia. See
 [`examples/demo.jl`](examples/demo.jl) for the full 8-step script, or the
 [`examples/`](examples) directory for ~20 focused one-feature scripts.
 
@@ -72,7 +72,7 @@ With the optional `Plots` extension (`examples/plot_layout.jl` /
 <img src="examples/thruster_layout.png" width="420" alt="Thruster layout: 8 thrusters, two failed (grey ✕), one reversed (red arrow)"> <img src="examples/manipulability.png" width="420" alt="3-D manipulability ellipsoid with the weakest axis in red">
 
 *Left: force-vector layout for a forward+yaw command with two thrusters failed
-(grey ✕) and one reversed (red). Right: the manipulability ellipsoid — long
+(grey ✕) and one reversed (red). Right: the manipulability ellipsoid: long
 axes are cheap directions, the red axis is the design's weak spot.*
 
 ---
@@ -92,7 +92,7 @@ Thruster Helper started as an excuse to learn Julia while exploring these
 problems. The project is intentionally small. It focuses on one task: given a
 desired force and torque on an underwater vehicle, determine what each thruster
 should do. Around that core idea are tools for understanding the vehicle
-itself — its control authority, redundancy, failure modes, and power usage.
+itself: its control authority, redundancy, failure modes, and power usage.
 
 This is **not** intended to replace a flight controller or a ROS 2 control
 stack. It is a lightweight toolkit for experimenting with thruster layouts and
@@ -111,7 +111,7 @@ like a good middle ground:
 - Excellent scientific-computing ecosystem
 - Easy to prototype algorithms before rewriting them in C++ if necessary
 
-Most of Thruster Helper is simply linear algebra — exactly the kind of work Julia
+Most of Thruster Helper is simply linear algebra: exactly the kind of work Julia
 was designed for.
 
 ---
@@ -119,7 +119,7 @@ was designed for.
 ## Why this matters
 
 Pool time and field time are the expensive, limited resource on any AUV/ROV
-project — every hour spent debugging thruster wiring in the water is an hour
+project: every hour spent debugging thruster wiring in the water is an hour
 not spent testing the mission itself. Most allocation bugs are geometric and
 catchable on a laptop before that:
 
@@ -137,7 +137,7 @@ catchable on a laptop before that:
   into a dependency-free header that runs on the real flight controller, so the
   same math that was checked in Julia is what ships.
 
-None of this is specific to one team's vehicle — the `AbstractActuator`/`Vehicle`
+None of this is specific to one team's vehicle: the `AbstractActuator`/`Vehicle`
 abstraction means a RoboSub ROV, a research AUV, or a spacecraft reaction-wheel
 cluster all go through the same checks. The point isn't the linear algebra
 (`pinv` is one line); it's catching a bad design *before* it costs a pool
@@ -172,7 +172,7 @@ Thruster Helper builds the **allocation matrix** `B` so that
 τ = B f
 ```
 
-and then solves the inverse problem for the actuator commands — with a choice of
+and then solves the inverse problem for the actuator commands, with a choice of
 algorithms, not just the pseudo-inverse:
 
 ```text
@@ -203,7 +203,7 @@ B[:, i] = [ direction_x
 command, or the least-squares closest wrench when the geometry can't fully
 achieve it.
 
-That sounds simple, but many interesting questions appear immediately — and
+That sounds simple, but many interesting questions appear immediately, and
 they are exactly what this project tries to answer:
 
 - Is every degree of freedom controllable?
@@ -279,7 +279,7 @@ Summary:
 
 ## The `Vehicle` and actuators
 
-An actuator is anything that turns a scalar command into a 6-DOF wrench — the
+An actuator is anything that turns a scalar command into a 6-DOF wrench: the
 `AbstractActuator` interface. The built-in `Thruster` is a position, a push
 **direction** (auto-normalised), and a `max_thrust`. Convention: **x forward,
 y left, z up**, positions about the centre of mass. Bundle actuators into a
@@ -300,7 +300,7 @@ diagnostics(vehicle)              # rank, conditioning, control authority …
 describe(vehicle)                 # geometry table
 ```
 
-`Thruster` is **immutable** — a vehicle does not move its thrusters at run time;
+`Thruster` is **immutable**: a vehicle does not move its thrusters at run time;
 build a new one to change geometry. Built-in layouts: `bluerov_heavy(; arm,
 span)` / `bluerov_vehicle()` (BlueROV2 Heavy, 8 thrusters, fully actuated),
 `bluerov_standard(; arm, span)` / `bluerov_standard_vehicle()` (standard 6-thruster
@@ -324,11 +324,11 @@ dependency-free (built on `LinearAlgebra`).
 
 `allocate` returns an `AllocationResult` with `commands`, `desired`, `achieved`
 (`= B·commands`) and `residual` (`achieved − desired`). A non-zero residual is
-the headline diagnostic: the geometry — or the surviving thrusters after a
-failure — cannot meet the command. See `examples/solver_comparison.jl`.
+the headline diagnostic: the geometry (or the surviving thrusters after a
+failure) cannot meet the command. See `examples/solver_comparison.jl`.
 
 > **Why not just use `pinv`?** `pinv(B) τ` is the right answer to a narrower
-> question — least-‖f‖ with *no other constraints*. It silently ignores
+> question: least-‖f‖ with *no other constraints*. It silently ignores
 > saturation limits, electrical power, failed thrusters and per-actuator
 > weighting. Thruster Helper exists to handle exactly those: `:qp` respects limits,
 > `:minimum_power` targets draw, `:weighted` steers around weak actuators,
@@ -343,12 +343,12 @@ Allocation tells you the thrust values; **diagnostics** tell you whether the
 *design* is any good. `diagnostics(B_or_vehicle)` returns an
 `AllocationDiagnostics` with:
 
-- `rank` — `6` ⇒ fully actuated; lower ⇒ DOFs are uncontrollable.
-- `redundancy` — `N − rank`, the null-space / spare control dimension.
-- `condition_number` — `σ_max/σ_min`; large ⇒ some directions need far more thrust (`Inf` when rank-deficient, matching `cond(B)`).
-- `manipulability` — `√det(B Bᵀ)`, volume of the achievable-wrench ellipsoid.
-- `controllable` — `Bool` per DOF `[Fx, Fy, Fz, τx, τy, τz]`.
-- `singular_values`, `weakest_direction`, `weakest_gain` — the SVD picture.
+- `rank`: `6` ⇒ fully actuated; lower ⇒ DOFs are uncontrollable.
+- `redundancy`: `N − rank`, the null-space / spare control dimension.
+- `condition_number`: `σ_max/σ_min`; large ⇒ some directions need far more thrust (`Inf` when rank-deficient, matching `cond(B)`).
+- `manipulability`: `√det(B Bᵀ)`, volume of the achievable-wrench ellipsoid.
+- `controllable`: `Bool` per DOF `[Fx, Fy, Fz, τx, τy, τz]`.
+- `singular_values`, `weakest_direction`, `weakest_gain`: the SVD picture.
 
 ```julia
 report(diagnostics(vehicle))
@@ -383,7 +383,7 @@ Built on the core, these answer the questions a vehicle *designer* asks:
 | `rank_failures(vehicle; pairs=…)` | How critical is each thruster? Rank/κ change and lost DOFs for every failure (or pair). |
 | `monte_carlo(vehicle; misalignment_deg, failure_prob, …)` | How robust is the design? P(lose each DOF) and the κ distribution over thousands of perturbed builds. |
 | `top_speeds(vehicle; drag)` | Force authority → **velocity** authority: steady-state top speed / turn rate per DOF, given quadratic hydrodynamic drag. |
-| `simulate(vehicle, setpoint; kp, kd, drag)` | **Closed loop**: a PID controller through the allocator + rigid-body dynamics — watch a setpoint converge, or a thruster failure degrade tracking. |
+| `simulate(vehicle, setpoint; kp, kd, drag)` | **Closed loop**: a PID controller through the allocator + rigid-body dynamics: watch a setpoint converge, or a thruster failure degrade tracking. |
 | `optimize_layout(vehicle; objective, free)` | **Design**, not just analyse: re-aim (and/or move) thrusters to minimise κ or maximise manipulability. |
 | `sensitivity(vehicle; objective, method)` | Gradient of a design metric w.r.t. thruster angles: which thruster to nudge and how much it matters. Finite-difference for any metric, or exact `ForwardDiff` (`using ForwardDiff`) for manipulability. |
 
@@ -409,13 +409,13 @@ custom `objective = vehicle -> …` to minimise. See the `reachability.jl`,
 ## Shared power / current budgets
 
 Thrusters are often ganged on power boards, or share a battery / ESC current
-limit — a constraint that per-actuator bounds can't express. Three composable,
+limit: a constraint that per-actuator bounds can't express. Three composable,
 dependency-free helpers cover it:
 
 | Tool | What it does |
 |---|---|
 | `estimate_current(f; k, p, k_reverse)` | Per-actuator current draw as `∝ \|f\|ᵖ`, with an optional separate reverse coefficient (many thrusters draw more current per unit thrust in reverse). |
-| `group_totals(x, groups)` | Sum any per-actuator quantity (current, power, thrust…) over arbitrary index groups — power boards, thermal zones, hydraulic circuits. |
+| `group_totals(x, groups)` | Sum any per-actuator quantity (current, power, thrust…) over arbitrary index groups: power boards, thermal zones, hydraulic circuits. |
 | `allocate_grouped(vehicle, τ; groups, budgets, …)` | Allocate a wrench while keeping each group within its shared budget, on top of the per-actuator limits. |
 
 ```julia
@@ -431,14 +431,14 @@ r = allocate_grouped(vehicle, τ; groups = boards, budgets = 24,
 `allocate_grouped` reuses the `:qp` inner solve, so per-actuator limits are
 **always** respected; the residual grows if the wrench can't be met within the
 budgets. It's a heuristic (box-tightening on over-budget groups), not the
-optimal constrained QP. Nothing vehicle-specific is baked in — groups, current
+optimal constrained QP. Nothing vehicle-specific is baked in: groups, current
 anchors and budgets are all caller-supplied. See `examples/board_budget.jl`.
 
 ---
 
 ## Beyond AUVs
 
-The math is not underwater-specific — any rigid body whose actuators sum to a
+The math is not underwater-specific: any rigid body whose actuators sum to a
 wrench fits. Actuators are an `AbstractActuator` hierarchy, so a spacecraft
 `ReactionWheel` (pure torque about an axis) drops into the same pipeline:
 
@@ -450,7 +450,7 @@ report_failures(rank_failures(sat))          # lose any one wheel → still rank
 ```
 
 `cubesat_vehicle()` / `cubesat_pyramid()` are the spacecraft analogue of
-`bluerov_vehicle()` — an off-the-shelf reference cluster (à la Blue Canyon RWP /
+`bluerov_vehicle()`: an off-the-shelf reference cluster (à la Blue Canyon RWP /
 CubeSpace CubeWheel). A wheel craft makes no force, so `condition_number` is
 `Inf` over the full 6 DOF; the meaningful metric is `cond(B[4:6, :])` (the torque
 sub-block) or `plot_manipulability(sat; block=:torque)`. See
@@ -462,7 +462,7 @@ sub-block) or `plot_manipulability(sat; block=:torque)`. See
 ## Deploying to firmware / ROS 2
 
 `export_cpp(vehicle)` bakes any vehicle's allocation into a self-contained,
-dependency-free C++17 header — no Julia or ThrusterHelper needed at runtime:
+dependency-free C++17 header. No Julia or ThrusterHelper needed at runtime:
 
 ```julia
 export_cpp(bluerov_vehicle(); path = "thruster_allocation.hpp")
@@ -475,7 +475,7 @@ auto f = thruster_allocation::allocate({Fx, Fy, Fz, taux, tauy, tauz});
 
 `:minimum_norm` and `:weighted` reduce to a fixed matrix once geometry is
 chosen, so the header just does a constant-size matrix-vector multiply and a
-direction-preserving saturation clamp — O(N), no heap, no iteration, real-time
+direction-preserving saturation clamp: O(N), no heap, no iteration, real-time
 safe. (`:qp`/`:minimum_power` are iterative and don't export.) This works for
 any vehicle built with this package, not one particular AUV: swap in your own
 thruster layout and regenerate. See `examples/export_cpp.jl`.
@@ -491,7 +491,7 @@ with no ROS install needed.
 
 ## Real command units (thrust curves)
 
-Allocation works in **force** (newtons) — the wrench is linear in thruster
+Allocation works in **force** (newtons): the wrench is linear in thruster
 force, so that's where the math belongs. But a real thruster's force↔command
 relationship is nonlinear and asymmetric: a BlueRobotics T200 pushes ~+51 N
 forward yet only ~−40 N in reverse, with a dead-band around neutral PWM. A
@@ -511,13 +511,13 @@ pwm = actuator_commands(r, v.actuators)              # → PWM µs via each thru
 Thrusters without a curve pass through unchanged (force in N), so this is fully
 opt-in and backward compatible. `force_to_command` / `command_to_force` expose
 the mapping directly, and `t200_curve()` is a ready-made starting point (retune
-the samples to your own bench data). The `export_cpp` mixer emits forces too —
+the samples to your own bench data). The `export_cpp` mixer emits forces too:
 apply your curve on the firmware side. See `examples/thrust_curve.jl`.
 
 **Battery sag.** Thrust falls as the pack drains. `derate(vehicle; from=16, to=12)`
 returns a copy with every thruster's limit (and curve) scaled to the lower
 voltage, so `reachable` and the authority envelope reflect end-of-mission
-capability — and `estimate_current(f; voltage=12, ref_voltage=16)` accounts for a
+capability, and `estimate_current(f; voltage=12, ref_voltage=16)` accounts for a
 sagging pack drawing *more* current for the same thrust.
 
 ---
@@ -545,7 +545,7 @@ green, reverse is red, failed thrusters are greyed with an ✕. (`plot_thrusters
 takes the actuator vector directly.)
 
 `plot_manipulability(vehicle; block=:force)` draws the 3-D **manipulability
-ellipsoid** — the set of wrenches reachable with a unit command ball. Its long
+ellipsoid**: the set of wrenches reachable with a unit command ball. Its long
 axes are cheap-to-produce directions; the short (red) axis is the design's weak
 spot. See `examples/plot_ellipsoid.jl`.
 
@@ -575,7 +575,7 @@ Pluto installs `ThrusterHelper`, `Plots` and `PlutoUI` for you on first open.
 
 ## Examples
 
-~15 small, focused scripts — run with `julia --project=. examples/<name>.jl`.
+~30 small, focused scripts: run with `julia --project=. examples/<name>.jl`.
 A few highlights (see [`examples/README.md`](examples/README.md) for the full list):
 
 - **Single-DOF**: `forward.jl`, `yaw.jl`, `hover.jl`, `roll.jl`.
@@ -603,12 +603,12 @@ ThrusterHelper.jl/
 │   ├── types.jl             # AbstractActuator, Thruster, ReactionWheel, Vehicle, results
 │   ├── geometry.jl          # skew, force/torque contributions
 │   ├── allocation_matrix.jl # build B, forward map, command bounds
-│   ├── solver.jl            # allocate(...; method) — the solvers
+│   ├── solver.jl            # allocate(...; method): the solvers
 │   ├── constraints.jl       # saturation, scaling, failures, power
 │   ├── diagnostics.jl       # rank, conditioning, SVD, control authority
 │   ├── analysis.jl          # reachable, compare_methods, rank_failures, monte_carlo
-│   ├── optimize.jl          # optimize_layout — design search
-│   ├── export_cpp.jl        # export_cpp — real-time-safe C++ header codegen
+│   ├── optimize.jl          # optimize_layout: design search
+│   ├── export_cpp.jl        # export_cpp: real-time-safe C++ header codegen
 │   ├── visualization.jl     # text/ASCII reports (no deps)
 │   ├── plotting.jl          # graphical impl (loaded by the extension)
 │   └── layouts/
@@ -639,7 +639,7 @@ f = allocate(B, τ; method = …)     (inverse: wrench → command)
 
 When `B` has full row rank (6), every wrench is achievable and the residual is
 ~0. Drop below rank 6 (under-actuated layout, or enough failed thrusters) and
-some DOFs become uncontrollable — `diagnostics` and `residual` tell you which
+some DOFs become uncontrollable: `diagnostics` and `residual` tell you which
 and how much. The SVD `B = U Σ Vᵀ` underlies the analysis: `rank` counts the
 non-zero σ, `condition_number = σ_max/σ_min`, the smallest σ and its left
 singular vector give the **weakest direction**, and `nullspace(B)` is the
@@ -655,7 +655,7 @@ method-comparison report, failure-criticality ranking, Monte-Carlo robustness,
 a layout **optimiser**, a real-time-safe **C++ export**, an
 `AbstractActuator`/`Vehicle` abstraction, a power model, shared power-board
 **current-budget** allocation, and a **multi-domain built-in vehicle library**
-(AUV / ROV / spacecraft — BlueROV2 Heavy & standard, quad, CubeSat pyramid) —
+(AUV / ROV / spacecraft: BlueROV2 Heavy & standard, quad, CubeSat pyramid),
 the v1→v3 (allocation → diagnostics → design optimisation) arc.
 
 Shipped since then: nonlinear thruster curves + dead-bands (#20), a battery
@@ -670,7 +670,7 @@ welcome via issues.
 
 ## Contributing
 
-Contributions are welcome — and right now we're **especially looking for more
+Contributions are welcome, and right now we're **especially looking for more
 vehicles**. If you run an AUV, ROV, or other actuator layout, adding a built-in
 `Vehicle` for it (in `src/layouts/`) or a new `AbstractActuator` type lets the
 whole community analyse that design out of the box. Because everything is built
@@ -679,7 +679,7 @@ small, self-contained addition.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add one and how to set up for
 development, and the [Code of Conduct](CODE_OF_CONDUCT.md). Bug reports and
-feature ideas are just as welcome — [open an issue](https://github.com/wuisabel-gif/ThrusterHelper.jl/issues).
+feature ideas are just as welcome: [open an issue](https://github.com/wuisabel-gif/ThrusterHelper.jl/issues).
 
 ## License
 
