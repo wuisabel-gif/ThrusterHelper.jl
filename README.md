@@ -549,7 +549,7 @@ spot. See `examples/plot_ellipsoid.jl`.
 [`notebooks/thruster_designer.jl`](notebooks/thruster_designer.jl) is a
 [Pluto](https://plutojl.org) notebook: drag the **arm / span / cant** sliders to
 re-aim and resize the thrusters and watch **rank**, **condition number κ**,
-**manipulability** and **control authority** update live — or fail a thruster
+**manipulability** and **control authority** update live, or fail a thruster
 and see the design degrade. A second panel lets you paste *your own* vehicle in
 as a table (`x, y, z, azimuth°, elevation°, max_thrust`) and see its diagnostics.
 

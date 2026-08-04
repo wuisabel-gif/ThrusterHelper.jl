@@ -18,11 +18,11 @@ end
 
 # ╔═╡ 11111111-0000-0000-0000-000000000001
 md"""
-# 🚀 ThrusterHelper — interactive layout designer
+# 🚀 ThrusterHelper: interactive layout designer
 
 Drag the sliders to re-aim and resize the thrusters, or toggle a thruster
-**failed**, and watch the design metrics — **rank**, **condition number κ**,
-**manipulability**, **control authority** — recompute live.
+**failed**, and watch the design metrics (**rank**, **condition number κ**,
+**manipulability**, **control authority**) recompute live.
 
 Then scroll to **"Model your own vehicle"** and paste your sub's geometry in as a
 table to see *its* diagnostics.
@@ -39,7 +39,7 @@ begin
 end
 
 # ╔═╡ 11111111-0000-0000-0000-000000000003
-md"## 1. Live tuning — a vectored 8-thruster layout"
+md"## 1. Live tuning: a vectored 8-thruster layout"
 
 # ╔═╡ 11111111-0000-0000-0000-000000000004
 const THRUSTER_NAMES = [
@@ -120,7 +120,7 @@ plot(
 md"""
 ## 2. Model your own vehicle
 
-Paste your thrusters below — one per line as
+Paste your thrusters below, one per line, as
 `x, y, z, azimuth°, elevation°, max_thrust`. Lines starting with `#` are ignored.
 The diagnostics update as you type.
 """
