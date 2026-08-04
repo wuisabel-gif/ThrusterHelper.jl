@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>thruster_allocator</name>
+  <version>0.1.0</version>
+  <description>
+    ROS 2 node wrapping a ThrusterHelper.jl export_cpp() header: wrench in,
+    per-thruster commands out. Regenerate include/thruster_allocation.hpp for
+    your own vehicle (see generate_header.jl).
+  </description>
+  <maintainer email="231155141+wuisabel-gif@users.noreply.github.com">Isabel Wu</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
